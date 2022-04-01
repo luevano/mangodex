@@ -38,3 +38,25 @@ func TestGetMangaList(t *testing.T) {
 		t.Errorf("Getting manga failed: %s\n", err.Error())
 	}
 }
+
+func TestGroupList(t *testing.T) {
+	_, err := client.ScanlationGroup.List(&ScanlationGroupListOptions{
+		Limit:           100,
+		Offset:          0,
+		Ids:             nil,
+		Name:            "laughing",
+		FocusedLanguage: "",
+		Includes:        nil,
+		Order:           nil,
+	})
+	if err != nil {
+		t.Errorf("Getting Group List failed: %s\n", err.Error())
+	}
+}
+
+func TestGroupGet(t *testing.T) {
+	_, err := client.ScanlationGroup.Get("71ade5cd-93cf-4397-a5cc-d5c6181d8697")
+	if err != nil {
+		t.Errorf("Getting Group failed: %s\n", err.Error())
+	}
+}

@@ -21,11 +21,12 @@ type DexClient struct {
 	refreshToken string
 
 	// Services for MangaDex API
-	Auth    *AuthService
-	Manga   *MangaService
-	Chapter *ChapterService
-	User    *UserService
-	AtHome  *AtHomeService
+	Auth            *AuthService
+	Manga           *MangaService
+	Chapter         *ChapterService
+	User            *UserService
+	AtHome          *AtHomeService
+	ScanlationGroup *ScanlationGroupService
 }
 
 // service : Wrapper for DexClient.
@@ -56,6 +57,7 @@ func NewDexClient() *DexClient {
 	dex.Chapter = (*ChapterService)(&dex.common)
 	dex.User = (*UserService)(&dex.common)
 	dex.AtHome = (*AtHomeService)(&dex.common)
+	dex.ScanlationGroup = (*ScanlationGroupService)(&dex.common)
 
 	return dex
 }
