@@ -1,17 +1,7 @@
 package mangodex
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
-	"net/url"
-	"strconv"
-	"strings"
-	"time"
 )
 
 const (
@@ -49,6 +39,7 @@ type MDHomeClient struct {
 	Pages   []string
 }
 
+/*
 // NewMDHomeClient : Get MangaDex@Home client for a chapter.
 // https://api.mangadex.org/docs.html#operation/get-at-home-server-chapterId
 func (s *AtHomeService) NewMDHomeClient(chapterID string, quality string, forcePort443 bool) (*MDHomeClient, error) {
@@ -156,3 +147,4 @@ func (c *MDHomeClient) reportContext(ctx context.Context, r *reportPayload) (*ht
 	}
 	return c.client.Do(req)
 }
+*/

@@ -1,14 +1,5 @@
 package mangodex
 
-import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/url"
-)
-
 const (
 	LoginPath        = "auth/login"
 	LogoutPath       = "auth/logout"
@@ -18,6 +9,7 @@ const (
 // AuthService : Provides Auth services provided by the API.
 type AuthService service
 
+/*
 // AuthResponse : Typical AuthService response.
 type AuthResponse struct {
 	Result  string  `json:"result"`
@@ -134,3 +126,4 @@ func (s *AuthService) GetRefreshToken() string {
 func (s *AuthService) SetRefreshToken(refreshToken string) {
 	s.client.refreshToken = refreshToken
 }
+*/

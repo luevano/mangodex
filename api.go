@@ -12,6 +12,15 @@ const (
 	BaseAPI = "https://api.mangadex.org"
 )
 
+type DexResponse struct {
+	Result   string          `json:"result"`
+	Response string          `json:"response"`
+	Data     json.RawMessage `json:"data"`
+	Limit    int             `json:"limit"`
+	Offset   int             `json:"offset"`
+	Total    int             `json:"total"`
+}
+
 // DexClient : The MangaDex client.
 type DexClient struct {
 	client *http.Client
@@ -63,7 +72,7 @@ func NewDexClient() *DexClient {
 }
 
 // Request : Sends a request to the MangaDex API.
-func (c *DexClient) Request(ctx context.Context, method, url string, body io.Reader) (*http.Response, error) {
+func (dex *DexClient) Request(ctx context.Context, method, url string, body io.Reader) (*http.Response, error) {
 	// Create the request
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
@@ -71,10 +80,10 @@ func (c *DexClient) Request(ctx context.Context, method, url string, body io.Rea
 	}
 
 	// Set header for request.
-	req.Header = c.header
+	req.Header = dex.header
 
 	// Send request.
-	resp, err := c.client.Do(req)
+	resp, err := dex.client.Do(req)
 	if err != nil {
 		return nil, err
 	} else if resp.StatusCode != 200 {
@@ -92,18 +101,19 @@ func (c *DexClient) Request(ctx context.Context, method, url string, body io.Rea
 }
 
 // RequestAndDecode : Convenience wrapper to also decode response to required data type
-func (c *DexClient) RequestAndDecode(ctx context.Context, method, url string, body io.Reader, rt ResponseType) error {
+func (dex *DexClient) RequestAndDecode(ctx context.Context, method, url string, body io.Reader) (*DexResponse, error) {
 	// Get the response of the request.
-	resp, err := c.Request(ctx, method, url, body)
+	resp, err := dex.Request(ctx, method, url, body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Decode the request into the specified ResponseType.
-	err = json.NewDecoder(resp.Body).Decode(rt)
+	var res DexResponse
+	err = json.NewDecoder(resp.Body).Decode(&res)
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
 	}(resp.Body)
 
-	return err
+	return &res, err
 }

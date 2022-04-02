@@ -2,6 +2,7 @@ package mangodex
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -34,10 +35,10 @@ type ScanlationGroupAttributes struct {
 }
 
 type ScanlationGroup struct {
-	Id            string                    `json:"id"`
-	Type          string                    `json:"type"`
-	Attributes    ScanlationGroupAttributes `json:"attributes"`
-	Relationships []Relationship            `json:"relationships"`
+	Id            string                     `json:"id"`
+	Type          RelationshipType           `json:"type"`
+	Attributes    *ScanlationGroupAttributes `json:"attributes"`
+	Relationships []*Relationship            `json:"relationships"`
 }
 
 type ScanlationGroupService service
@@ -52,32 +53,8 @@ type ScanlationGroupListOptions struct {
 	Order           *GetOrder `json:"order,omitempty"`
 }
 
-// ScanlationGroupList : A response for getting a list of manga.
-type ScanlationGroupList struct {
-	Result   string            `json:"result"`
-	Response string            `json:"response"`
-	Data     []ScanlationGroup `json:"data"`
-	Limit    int               `json:"limit"`
-	Offset   int               `json:"offset"`
-	Total    int               `json:"total"`
-}
-
-func (gl *ScanlationGroupList) GetResult() string {
-	return gl.Result
-}
-
-type ScanlationGroupGet struct {
-	Result   string          `json:"result"`
-	Response string          `json:"response"`
-	Data     ScanlationGroup `json:"data"`
-}
-
-func (g *ScanlationGroupGet) GetResult() string {
-	return g.Result
-}
-
 // List : Returns array of groups matching the criteria
-func (s ScanlationGroupService) List(options *ScanlationGroupListOptions) (*[]ScanlationGroup, error) {
+func (s ScanlationGroupService) List(options *ScanlationGroupListOptions) ([]*ScanlationGroup, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(GroupList)
 
@@ -103,13 +80,17 @@ func (s ScanlationGroupService) List(options *ScanlationGroupListOptions) (*[]Sc
 	}
 	u.RawQuery = q.Encode()
 
-	var r ScanlationGroupList
-	err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &r)
+	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	var scanGroups []*ScanlationGroup
+	err = json.Unmarshal(res.Data, &scanGroups)
 	if err != nil {
 		return nil, err
 	}
 
-	return &r.Data, nil
+	return scanGroups, err
 }
 
 // Get : Returns array of groups matching the criteria
@@ -117,11 +98,15 @@ func (s ScanlationGroupService) Get(id string) (*ScanlationGroup, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(GroupGet, id)
 
-	var r ScanlationGroupGet
-	err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &r)
+	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	var scanGroup ScanlationGroup
+	err = json.Unmarshal(res.Data, &scanGroup)
 	if err != nil {
 		return nil, err
 	}
 
-	return &r.Data, nil
+	return &scanGroup, err
 }

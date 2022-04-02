@@ -1,12 +1,5 @@
 package mangodex
 
-import (
-	"context"
-	"net/http"
-	"net/url"
-	"strconv"
-)
-
 const (
 	GetUserFollowedMangaListPath = "user/follows/manga"
 	GetLoggedUserPath            = "user/me"
@@ -15,6 +8,7 @@ const (
 // UserService : Provides User services provided by the API.
 type UserService service
 
+/*
 // GetUserFollowedMangaList : Return list of followed Manga.
 // https://api.mangadex.org/docs.html#operation/get-user-follows-manga
 func (s *UserService) GetUserFollowedMangaList(limit, offset int, includes []string) (*MangaList, error) {
@@ -81,3 +75,4 @@ func (s *UserService) GetLoggedUserContext(ctx context.Context) (*UserResponse, 
 	err := s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &r)
 	return &r, err
 }
+*/

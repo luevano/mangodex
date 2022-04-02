@@ -1,7 +1,6 @@
 package mangodex
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -16,20 +15,6 @@ const (
 
 // ChapterService : Provides Chapter services provided by the API.
 type ChapterService service
-
-// ChapterList : A response for getting a list of chapters.
-type ChapterList struct {
-	Result   string    `json:"result"`
-	Response string    `json:"response"`
-	Data     []Chapter `json:"data"`
-	Limit    int       `json:"limit"`
-	Offset   int       `json:"offset"`
-	Total    int       `json:"total"`
-}
-
-func (cl *ChapterList) GetResult() string {
-	return cl.Result
-}
 
 // Chapter : Struct containing information on a manga.
 type Chapter struct {
@@ -68,23 +53,27 @@ type ChapterAttributes struct {
 
 // GetMangaChapters : Get a list of chapters for a manga.
 // https://api.mangadex.org/docs.html#operation/get-manga-id-feed
-func (s *ChapterService) GetMangaChapters(id string, params url.Values) (*ChapterList, error) {
-	return s.GetMangaChaptersContext(context.Background(), id, params)
-}
-
-// GetMangaChaptersContext : GetMangaChapters with custom context.
-func (s *ChapterService) GetMangaChaptersContext(ctx context.Context, id string, params url.Values) (*ChapterList, error) {
+func (s *ChapterService) GetMangaChapters(id string, params url.Values) ([]*Chapter, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(MangaChaptersPath, id)
 
 	// Set request parameters
 	u.RawQuery = params.Encode()
 
-	var l ChapterList
-	err := s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &l)
-	return &l, err
+	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	var chapterList []*Chapter
+	err = json.Unmarshal(res.Data, &chapterList)
+	if err != nil {
+		return nil, err
+	}
+
+	return chapterList, err
 }
 
+/*
 // ChapterReadMarkers : A response for getting a list of read chapters.
 type ChapterReadMarkers struct {
 	Result string   `json:"result"`
@@ -135,3 +124,4 @@ func (s *ChapterService) SetReadUnreadMangaChaptersContext(ctx context.Context, 
 	err = s.client.RequestAndDecode(ctx, http.MethodPost, u.String(), bytes.NewBuffer(rBytes), &r)
 	return &r, err
 }
+*/
