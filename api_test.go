@@ -55,8 +55,8 @@ func TestGroupList(t *testing.T) {
 }
 
 func TestGroupGet(t *testing.T) {
-	_, err := client.ScanlationGroup.Get("71ade5cd-93cf-4397-a5cc-d5c6181d8697")
-	if err != nil {
+	group, err := client.ScanlationGroup.Get("71ade5cd-93cf-4397-a5cc-d5c6181d8697")
+	if err != nil && group.Id == "71ade5cd-93cf-4397-a5cc-d5c6181d8697" {
 		t.Errorf("Getting Group failed: %s\n", err.Error())
 	}
 }

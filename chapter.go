@@ -11,6 +11,8 @@ import (
 const (
 	MangaChaptersPath    = "manga/%s/feed"
 	MangaReadMarkersPath = "manga/%s/read"
+	ChapterPath          = "/chapter/%s"
+	ChapterListPath      = "/chapter"
 )
 
 // ChapterService : Provides Chapter services provided by the API.
@@ -51,9 +53,44 @@ type ChapterAttributes struct {
 	PublishAt          string  `json:"publishAt"`
 }
 
+func (s *ChapterService) Get(id string) (chapter *Chapter, err error) {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = fmt.Sprintf(ChapterPath, id)
+
+	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(res.Data, &chapter)
+	if err != nil {
+		return nil, err
+	}
+
+	return chapter, err
+}
+
+func (s *ChapterService) List(params url.Values) (chapterList []*Chapter, err error) {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = ChapterListPath
+
+	// Set query parameters
+	u.RawQuery = params.Encode()
+
+	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(res.Data, &chapterList)
+	if err != nil {
+		return nil, err
+	}
+
+	return chapterList, err
+}
+
 // GetMangaChapters : Get a list of chapters for a manga.
 // https://api.mangadex.org/docs.html#operation/get-manga-id-feed
-func (s *ChapterService) GetMangaChapters(id string, params url.Values) ([]*Chapter, error) {
+func (s *ChapterService) GetMangaChapters(id string, params url.Values) (chapterList []*Chapter, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(MangaChaptersPath, id)
 
@@ -64,7 +101,6 @@ func (s *ChapterService) GetMangaChapters(id string, params url.Values) ([]*Chap
 	if err != nil {
 		return nil, err
 	}
-	var chapterList []*Chapter
 	err = json.Unmarshal(res.Data, &chapterList)
 	if err != nil {
 		return nil, err
