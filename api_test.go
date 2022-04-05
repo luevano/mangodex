@@ -78,3 +78,10 @@ func TestMangaGet(t *testing.T) {
 		t.Errorf("Getting Manga from Group failed: %s\n", err.Error())
 	}
 }
+
+func TestChapterGet(t *testing.T) {
+	chapter, err := client.Chapter.Get("eadc095d-e672-4136-98d0-41a98161ad0e")
+	if err != nil && chapter.GetTitle() == "Attachment" {
+		t.Errorf("Getting Manga from Group failed: %s\n", err.Error())
+	}
+}

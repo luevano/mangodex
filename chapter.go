@@ -57,6 +57,12 @@ func (s *ChapterService) Get(id string) (chapter *Chapter, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(ChapterPath, id)
 
+	params := url.Values{
+		"includes[]": {"manga"},
+	}
+
+	u.RawQuery = params.Encode()
+
 	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
