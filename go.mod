@@ -1,5 +1,5 @@
-module github.com/bob620/mangodex
+module github.com/luevano/mangodex
 
-go 1.17
+go 1.21
 
-require github.com/google/uuid v1.3.0
+require github.com/google/uuid v1.5.0
