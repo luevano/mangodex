@@ -33,6 +33,7 @@ type DexClient struct {
 	Auth            *AuthService
 	Manga           *MangaService
 	Chapter         *ChapterService
+	Cover           *CoverService
 	User            *UserService
 	AtHome          *AtHomeService
 	ScanlationGroup *ScanlationGroupService
@@ -64,6 +65,7 @@ func NewDexClient() *DexClient {
 	dex.Auth = (*AuthService)(&dex.common)
 	dex.Manga = (*MangaService)(&dex.common)
 	dex.Chapter = (*ChapterService)(&dex.common)
+	dex.Cover = (*CoverService)(&dex.common)
 	dex.User = (*UserService)(&dex.common)
 	dex.AtHome = (*AtHomeService)(&dex.common)
 	dex.ScanlationGroup = (*ScanlationGroupService)(&dex.common)
