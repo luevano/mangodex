@@ -19,7 +19,7 @@ const (
 type Manga struct {
 	ID            string           `json:"id"`
 	Type          RelationshipType `json:"type"`
-	Attributes    *MangaAttributes `json:"attributes"`
+	Attributes    MangaAttributes `json:"attributes"`
 	Relationships []*Relationship  `json:"relationships"`
 }
 

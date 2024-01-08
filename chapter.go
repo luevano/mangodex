@@ -23,7 +23,7 @@ type Chapter struct {
 	ID            string            `json:"id"`
 	Type          string            `json:"type"`
 	Attributes    ChapterAttributes `json:"attributes"`
-	Relationships []Relationship    `json:"relationships"`
+	Relationships []*Relationship    `json:"relationships"`
 }
 
 // GetTitle : Get a title for the chapter.
