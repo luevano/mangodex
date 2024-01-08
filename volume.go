@@ -45,7 +45,6 @@ func (s *VolumeService) List(id string, params url.Values) (map[string]*Volume, 
 	var volumeList map[string]*Volume
 	err = json.Unmarshal(res.Volumes, &volumeList)
 	if err != nil {
-		fmt.Printf("%v\n", string(res.Volumes))
 		return nil, err
 	}
 
