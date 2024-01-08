@@ -59,5 +59,5 @@ func (s *CoverService) List(ids []string, isMangaCover bool) ([]*Cover, error) {
 		return nil, err
 	}
 
-	return coverArtList, err
+	return coverArtList, nil
 }

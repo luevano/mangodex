@@ -72,7 +72,7 @@ func (s *ChapterService) Get(id string) (chapter *Chapter, err error) {
 		return nil, err
 	}
 
-	return chapter, err
+	return chapter, nil
 }
 
 func (s *ChapterService) List(params url.Values) (chapterList []*Chapter, err error) {
@@ -91,7 +91,7 @@ func (s *ChapterService) List(params url.Values) (chapterList []*Chapter, err er
 		return nil, err
 	}
 
-	return chapterList, err
+	return chapterList, nil
 }
 
 // GetMangaChapters : Get a list of chapters for a manga.
@@ -112,7 +112,7 @@ func (s *ChapterService) GetMangaChapters(id string, params url.Values) (chapter
 		return nil, err
 	}
 
-	return chapterList, err
+	return chapterList, nil
 }
 
 /*

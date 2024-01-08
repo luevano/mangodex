@@ -90,7 +90,7 @@ func (s ScanlationGroupService) List(options *ScanlationGroupListOptions) ([]*Sc
 		return nil, err
 	}
 
-	return scanGroups, err
+	return scanGroups, nil
 }
 
 // Get : Returns array of groups matching the criteria
@@ -108,5 +108,5 @@ func (s ScanlationGroupService) Get(id string) (*ScanlationGroup, error) {
 		return nil, err
 	}
 
-	return &scanGroup, err
+	return &scanGroup, nil
 }

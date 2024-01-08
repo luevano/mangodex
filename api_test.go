@@ -6,6 +6,9 @@ import (
 	"testing"
 )
 
+// TODO: either move all api call tests in here,
+// or move these to their respective "service"
+
 var client = NewDexClient()
 
 /*

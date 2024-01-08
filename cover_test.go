@@ -5,6 +5,7 @@ import (
 	"testing"
 )
 
+// TODO: use specific manga uuids
 func TestCover(t *testing.T) {
 	c := NewDexClient()
 	list, err := c.Manga.List(url.Values{})

@@ -79,7 +79,7 @@ func (s *MangaService) List(params url.Values) ([]*Manga, error) {
 		return nil, err
 	}
 
-	return mangaList, err
+	return mangaList, nil
 }
 
 // Get : Get a manga.
@@ -97,7 +97,7 @@ func (s *MangaService) Get(id string) (*Manga, error) {
 		return nil, err
 	}
 
-	return &manga, err
+	return &manga, nil
 }
 
 /*

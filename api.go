@@ -91,6 +91,8 @@ func (dex *DexClient) Request(ctx context.Context, method, url string, body io.R
 	} else if resp.StatusCode != 200 {
 		// Decode to an ErrorResponse struct.
 		var er ErrorResponse
+		// TODO: this fails on 503 errors for example, it tries to decode a non-json response
+		// looks like mangadex error responses changed
 		if err = json.NewDecoder(resp.Body).Decode(&er); err != nil {
 			return nil, err
 		}
