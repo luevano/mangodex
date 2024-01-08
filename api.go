@@ -15,6 +15,7 @@ const (
 type DexResponse struct {
 	Result   string          `json:"result"`
 	Response string          `json:"response"`
+	Volumes  json.RawMessage `json:"volumes"`
 	Data     json.RawMessage `json:"data"`
 	Limit    int             `json:"limit"`
 	Offset   int             `json:"offset"`
@@ -32,6 +33,7 @@ type DexClient struct {
 	// Services for MangaDex API
 	Auth            *AuthService
 	Manga           *MangaService
+	Volume		*VolumeService
 	Chapter         *ChapterService
 	Cover           *CoverService
 	User            *UserService
@@ -64,6 +66,7 @@ func NewDexClient() *DexClient {
 	// Reuse the common client for the other services
 	dex.Auth = (*AuthService)(&dex.common)
 	dex.Manga = (*MangaService)(&dex.common)
+	dex.Volume = (*VolumeService)(&dex.common)
 	dex.Chapter = (*ChapterService)(&dex.common)
 	dex.Cover = (*CoverService)(&dex.common)
 	dex.User = (*UserService)(&dex.common)
