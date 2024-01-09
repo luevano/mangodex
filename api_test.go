@@ -58,7 +58,7 @@ func TestGroupList(t *testing.T) {
 }
 
 func TestGroupGet(t *testing.T) {
-	group, err := client.ScanlationGroup.Get("71ade5cd-93cf-4397-a5cc-d5c6181d8697")
+	group, err := client.ScanlationGroup.Get("71ade5cd-93cf-4397-a5cc-d5c6181d8697", url.Values{})
 	if err != nil && group.Id == "71ade5cd-93cf-4397-a5cc-d5c6181d8697" {
 		t.Errorf("Getting Group failed: %s\n", err.Error())
 	}
@@ -76,14 +76,14 @@ func TestMangaGroupList(t *testing.T) {
 }
 
 func TestMangaGet(t *testing.T) {
-	manga, err := client.Manga.Get("acc3ff9c-3494-4bdc-b474-96b24d0c160c")
+	manga, err := client.Manga.Get("acc3ff9c-3494-4bdc-b474-96b24d0c160c", url.Values{})
 	if err != nil && manga.Attributes.Title.GetLocalString("en") == "Ochite Oborete" {
 		t.Errorf("Getting Manga from Group failed: %s\n", err.Error())
 	}
 }
 
 func TestChapterGet(t *testing.T) {
-	chapter, err := client.Chapter.Get("eadc095d-e672-4136-98d0-41a98161ad0e")
+	chapter, err := client.Chapter.Get("eadc095d-e672-4136-98d0-41a98161ad0e", url.Values{})
 	if err != nil && chapter.GetTitle() == "Attachment" {
 		t.Errorf("Getting Manga from Group failed: %s\n", err.Error())
 	}

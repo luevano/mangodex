@@ -9,17 +9,21 @@ import (
 )
 
 const (
-	MangaAggregatePath = "manga/%s/aggregate"
+	MangaAggregatePath = "/manga/%s/aggregate"
 )
 
-// Volume : Struct containing information on a volume.
+// TODO: integrate the manga/id/aggregate to manga.go?
+// VolumeService : Provides volume services provided by the API (manga/id/aggregate).
+type VolumeService service
+
+// Volume: Struct containing information on a volume.
 type Volume struct {
 	Volume   string                   `json:"volume"`
 	Count    int                      `json:"count"`
 	Chapters map[string]VolumeChapter `json:"chapters"`
 }
 
-// VolumeChapter : Chapter data specific to the volumes list. This is different to the actual Chapter data.
+// VolumeChapter: Chapter data specific to the volumes list. This is different to the actual Chapter data.
 type VolumeChapter struct {
 	Chapter string   `json:"chapter"`
 	ID      string   `json:"id"`
@@ -27,10 +31,7 @@ type VolumeChapter struct {
 	Count   int      `json:"count"`
 }
 
-// VolumeService : Provides Volume services provided by the API (manga/id/aggregate).
-type VolumeService service
-
-// List : Get a list of Manga volumes.
+// List: Get a list of manga volumes.
 func (s *VolumeService) List(id string, params url.Values) (map[string]*Volume, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(MangaAggregatePath, id)
@@ -42,6 +43,7 @@ func (s *VolumeService) List(id string, params url.Values) (map[string]*Volume, 
 	if err != nil {
 		return nil, err
 	}
+	// TODO: handle when no volumes are found
 	var volumeList map[string]*Volume
 	err = json.Unmarshal(res.Volumes, &volumeList)
 	if err != nil {

@@ -1,6 +1,6 @@
 package mangodex
 
-const APIVersion = "5.5.8"
+const APIVersion = "5.10.0"
 
 // Publication demographic
 

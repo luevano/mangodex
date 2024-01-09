@@ -9,29 +9,29 @@ import (
 )
 
 const (
-	MangaChaptersPath    = "manga/%s/feed"
-	MangaReadMarkersPath = "manga/%s/read"
-	ChapterPath          = "/chapter/%s"
-	ChapterListPath      = "/chapter"
+	ChapterPath       = "/chapter/%s"
+	ChapterListPath   = "/chapter"
+	MangaChaptersPath = "/manga/%s/feed" // TODO: move to manga.go?
+	// MangaReadMarkersPath = "/manga/%s/read"
 )
 
-// ChapterService : Provides Chapter services provided by the API.
+// ChapterService: Provides chapter services provided by the API.
 type ChapterService service
 
-// Chapter : Struct containing information on a manga.
+// Chapter: Struct containing information on a chapter.
 type Chapter struct {
 	ID            string            `json:"id"`
 	Type          string            `json:"type"`
 	Attributes    ChapterAttributes `json:"attributes"`
-	Relationships []*Relationship    `json:"relationships"`
+	Relationships []*Relationship   `json:"relationships"`
 }
 
-// GetTitle : Get a title for the chapter.
+// GetTitle: Get a title for the chapter.
 func (c *Chapter) GetTitle() string {
 	return c.Attributes.Title
 }
 
-// GetChapterNum : Get the chapter's chapter number.
+// GetChapterNum: Get the chapter's chapter number.
 func (c *Chapter) GetChapterNum() string {
 	if num := c.Attributes.Chapter; num != nil {
 		return *num
@@ -39,7 +39,7 @@ func (c *Chapter) GetChapterNum() string {
 	return "-"
 }
 
-// ChapterAttributes : Attributes for a Chapter.
+// ChapterAttributes: Attributes for a chapter.
 type ChapterAttributes struct {
 	Title              string  `json:"title"`
 	Volume             *string `json:"volume"`
@@ -53,14 +53,13 @@ type ChapterAttributes struct {
 	PublishAt          string  `json:"publishAt"`
 }
 
-func (s *ChapterService) Get(id string) (chapter *Chapter, err error) {
+// Get: Get chapter by chapter id.
+// https://api.mangadex.org/docs/redoc.html#tag/Chapter/operation/get-chapter-id
+func (s *ChapterService) Get(id string, params url.Values) (chapter *Chapter, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(ChapterPath, id)
 
-	params := url.Values{
-		"includes[]": {"manga"},
-	}
-
+	// Set query parameters
 	u.RawQuery = params.Encode()
 
 	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
@@ -75,6 +74,8 @@ func (s *ChapterService) Get(id string) (chapter *Chapter, err error) {
 	return chapter, nil
 }
 
+// List: Get chapter list.
+// https://api.mangadex.org/docs/redoc.html#tag/Chapter/operation/get-chapter
 func (s *ChapterService) List(params url.Values) (chapterList []*Chapter, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = ChapterListPath
@@ -94,8 +95,9 @@ func (s *ChapterService) List(params url.Values) (chapterList []*Chapter, err er
 	return chapterList, nil
 }
 
-// GetMangaChapters : Get a list of chapters for a manga.
-// https://api.mangadex.org/docs.html#operation/get-manga-id-feed
+// TODO: move this to manga.go?
+// GetMangaChapters: Get a list of chapters for a manga by manga id.
+// https://api.mangadex.org/docs/redoc.html#tag/Manga/operation/get-manga-id-feed
 func (s *ChapterService) GetMangaChapters(id string, params url.Values) (chapterList []*Chapter, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(MangaChaptersPath, id)
@@ -115,8 +117,11 @@ func (s *ChapterService) GetMangaChapters(id string, params url.Values) (chapter
 	return chapterList, nil
 }
 
+// TODO: update viable methods later. Most of this is either deprecated
+// or the API changed drastically (due to auth being different).
+// The code is heavily outdated.
 /*
-// ChapterReadMarkers : A response for getting a list of read chapters.
+// ChapterReadMarkers: A response for getting a list of read chapters.
 type ChapterReadMarkers struct {
 	Result string   `json:"result"`
 	Data   []string `json:"data"`
@@ -126,13 +131,13 @@ func (rmr *ChapterReadMarkers) GetResult() string {
 	return rmr.Result
 }
 
-// GetReadMangaChapters : Get list of Chapter IDs that are marked as read for a specified manga ID.
+// GetReadMangaChapters: Get list of Chapter IDs that are marked as read for a specified manga ID.
 // https://api.mangadex.org/docs.html#operation/get-manga-chapter-readmarkers
 func (s *ChapterService) GetReadMangaChapters(id string) (*ChapterReadMarkers, error) {
 	return s.GetReadMangaChaptersContext(context.Background(), id)
 }
 
-// GetReadMangaChaptersContext : GetReadMangaChapters with custom context.
+// GetReadMangaChaptersContext: GetReadMangaChapters with custom context.
 func (s *ChapterService) GetReadMangaChaptersContext(ctx context.Context, id string) (*ChapterReadMarkers, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(MangaReadMarkersPath, id)
@@ -142,12 +147,12 @@ func (s *ChapterService) GetReadMangaChaptersContext(ctx context.Context, id str
 	return &rmr, err
 }
 
-// SetReadUnreadMangaChapters : Set read/unread manga chapters.
+// SetReadUnreadMangaChapters: Set read/unread manga chapters.
 func (s *ChapterService) SetReadUnreadMangaChapters(id string, read, unRead []string) (*Response, error) {
 	return s.SetReadUnreadMangaChaptersContext(context.Background(), id, read, unRead)
 }
 
-// SetReadUnreadMangaChaptersContext : SetReadUnreadMangaChapters with custom context.
+// SetReadUnreadMangaChaptersContext: SetReadUnreadMangaChapters with custom context.
 func (s *ChapterService) SetReadUnreadMangaChaptersContext(ctx context.Context, id string, read, unRead []string) (*Response, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(MangaReadMarkersPath, id)

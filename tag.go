@@ -2,7 +2,7 @@ package mangodex
 
 import "github.com/google/uuid"
 
-// Tag : Struct containing information on a tag.
+// Tag: Struct containing information on a tag.
 type Tag struct {
 	ID            uuid.UUID        `json:"id"`
 	Type          RelationshipType `json:"type"`
@@ -10,7 +10,7 @@ type Tag struct {
 	Relationships []*Relationship  `json:"relationships"`
 }
 
-// TagAttributes : Attributes for a Tag.
+// TagAttributes: Attributes for a tag.
 type TagAttributes struct {
 	Name        LocalisedStrings `json:"name"`
 	Description LocalisedStrings `json:"description"`
@@ -18,7 +18,7 @@ type TagAttributes struct {
 	Version     int              `json:"version"`
 }
 
-// GetName : Get name of the tag.
+// GetName: Get name of the tag.
 func (t *Tag) GetName(langCode string) string {
 	return t.Attributes.Name.GetLocalString(langCode)
 }

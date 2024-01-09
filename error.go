@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// ErrorResponse : Typical response for errored requests.
+// ErrorResponse: Typical response for errored requests.
 type ErrorResponse struct {
 	Result string  `json:"result"`
 	Errors []Error `json:"errors"`
@@ -15,7 +15,7 @@ func (er *ErrorResponse) GetResult() string {
 	return er.Result
 }
 
-// GetErrors : Get the errors for this particular request.
+// GetErrors: Get the errors for this particular request.
 func (er *ErrorResponse) GetErrors() string {
 	var errors strings.Builder
 	for _, err := range er.Errors {
@@ -24,7 +24,7 @@ func (er *ErrorResponse) GetErrors() string {
 	return errors.String()
 }
 
-// Error : Struct containing details of an error.
+// Error: Struct containing details of an error.
 type Error struct {
 	ID     string `json:"id"`
 	Status int    `json:"status"`

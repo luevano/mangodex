@@ -14,14 +14,14 @@ import (
 )
 
 const (
-	GetMDHomeURLPath = "at-home/server/%s"
+	GetMDHomeURLPath = "/at-home/server/%s"
 	MDHomeReportURL  = "https://api.mangadex.network/report"
 )
 
-// AtHomeService : Provides MangaDex@Home services provided by the API.
+// AtHomeService: Provides MangaDex@Home services provided by the API.
 type AtHomeService service
 
-// MDHomeServerResponse : A response for getting a server URL to get chapters.
+// MDHomeServerResponse: A response for getting a server URL to get chapters.
 type MDHomeServerResponse struct {
 	Result  string      `json:"result"`
 	BaseURL string      `json:"baseUrl"`
@@ -32,14 +32,14 @@ func (r *MDHomeServerResponse) GetResult() string {
 	return r.Result
 }
 
-// ChapterData : Struct containing data for the chapter's pages.
+// ChapterData: Struct containing data for the chapter's pages.
 type ChapterData struct {
 	Hash      string   `json:"hash"`
 	Data      []string `json:"data"`
 	DataSaver []string `json:"dataSaver"`
 }
 
-// MDHomeClient : Client for interfacing with MangaDex@Home.
+// MDHomeClient: Client for interfacing with MangaDex@Home.
 type MDHomeClient struct {
 	client  *http.Client
 	quality string
@@ -48,8 +48,8 @@ type MDHomeClient struct {
 	Pages   []string
 }
 
-// NewMDHomeClient : Get MangaDex@Home client for a chapter.
-// https://api.mangadex.org/docs.html#operation/get-at-home-server-chapterId
+// NewMDHomeClient: Get MangaDex@Home client for a chapter.
+// https://api.mangadex.org/docs/redoc.html#tag/AtHome/operation/get-at-home-server-chapterId
 func (s *AtHomeService) NewMDHomeClient(chapterID string, quality string, forcePort443 bool) (*MDHomeClient, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(GetMDHomeURLPath, chapterID)
@@ -88,7 +88,7 @@ func (s *AtHomeService) NewMDHomeClient(chapterID string, quality string, forceP
 	}, nil
 }
 
-// GetChapterPage : Return page data for a chapter with the filename of that page.
+// GetChapterPage: Return page data for a chapter with the filename of that page.
 func (c *MDHomeClient) GetChapterPage(filename string) ([]byte, error) {
 	path := strings.Join([]string{c.BaseURL, c.quality, c.Hash, filename}, "/")
 	ctx := context.Background()
@@ -133,7 +133,7 @@ func (c *MDHomeClient) GetChapterPage(filename string) ([]byte, error) {
 	return fileData, err
 }
 
-// reportPayload : Required fields for reporting page download result.
+// reportPayload: Required fields for reporting page download result.
 type reportPayload struct {
 	URL      string
 	Success  bool
@@ -142,7 +142,7 @@ type reportPayload struct {
 	Cached   bool
 }
 
-// reportContext : Report success of getting chapter page data.
+// reportContext: Report success of getting chapter page data.
 func (c *MDHomeClient) reportContext(ctx context.Context, r *reportPayload) (*http.Response, error) {
 	rBytes, err := json.Marshal(r)
 	if err != nil {

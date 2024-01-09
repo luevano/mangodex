@@ -10,11 +10,22 @@ import (
 )
 
 const (
-	GroupList = "group"
-	GroupGet  = "group/%s"
+	GroupList = "/group"
+	GroupGet  = "/group/%s"
 )
 
-// ScanlationGroupAttributes : Attributes for a scanlation group
+// ScanlationGroupService: Provides scanlation group services provided by the API.
+type ScanlationGroupService service
+
+// ScanlationGroup: Struct containing information on a scanlation group.
+type ScanlationGroup struct {
+	Id            string                     `json:"id"`
+	Type          RelationshipType           `json:"type"`
+	Attributes    *ScanlationGroupAttributes `json:"attributes"`
+	Relationships []*Relationship            `json:"relationships"`
+}
+
+// ScanlationGroupAttributes: Attributes for a scanlation group
 type ScanlationGroupAttributes struct {
 	Name            string           `json:"name"`
 	AltNames        LocalisedStrings `json:"altNames"`
@@ -34,15 +45,7 @@ type ScanlationGroupAttributes struct {
 	UpdatedAt       string           `json:"updatedAt"`
 }
 
-type ScanlationGroup struct {
-	Id            string                     `json:"id"`
-	Type          RelationshipType           `json:"type"`
-	Attributes    *ScanlationGroupAttributes `json:"attributes"`
-	Relationships []*Relationship            `json:"relationships"`
-}
-
-type ScanlationGroupService service
-
+// ScanlationGroupListOptions: Options for the scanlation group list.
 type ScanlationGroupListOptions struct {
 	Limit           int       `json:"limit"`
 	Offset          int       `json:"offset"`
@@ -53,7 +56,31 @@ type ScanlationGroupListOptions struct {
 	Order           *GetOrder `json:"order,omitempty"`
 }
 
-// List : Returns array of groups matching the criteria
+// Get: Get scanlation group by scanlation group id.
+// https://api.mangadex.org/docs/redoc.html#tag/ScanlationGroup/operation/get-group-id
+func (s ScanlationGroupService) Get(id string, params url.Values) (*ScanlationGroup, error) {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = fmt.Sprintf(GroupGet, id)
+
+	// Set query parameters
+	u.RawQuery = params.Encode()
+
+	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	var scanGroup ScanlationGroup
+	err = json.Unmarshal(res.Data, &scanGroup)
+	if err != nil {
+		return nil, err
+	}
+
+	return &scanGroup, nil
+}
+
+// TODO: change this to use url.Values instead of custom option struct. This is the only method that has its custom options. Or add custom options to all other methods.
+// List: Get scanlation group list.
+// https://api.mangadex.org/docs/redoc.html#tag/ScanlationGroup/operation/get-search-group
 func (s ScanlationGroupService) List(options *ScanlationGroupListOptions) ([]*ScanlationGroup, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(GroupList)
@@ -75,8 +102,8 @@ func (s ScanlationGroupService) List(options *ScanlationGroupListOptions) ([]*Sc
 		q.Add("includes[]", i)
 	}
 	if options.Order != nil {
-		//data, _ := json.Marshal(options.Order)
-		//q.Add("order", string(data))
+		// data, _ := json.Marshal(options.Order)
+		// q.Add("order", string(data))
 	}
 	u.RawQuery = q.Encode()
 
@@ -91,22 +118,4 @@ func (s ScanlationGroupService) List(options *ScanlationGroupListOptions) ([]*Sc
 	}
 
 	return scanGroups, nil
-}
-
-// Get : Returns array of groups matching the criteria
-func (s ScanlationGroupService) Get(id string) (*ScanlationGroup, error) {
-	u, _ := url.Parse(BaseAPI)
-	u.Path = fmt.Sprintf(GroupGet, id)
-
-	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-	var scanGroup ScanlationGroup
-	err = json.Unmarshal(res.Data, &scanGroup)
-	if err != nil {
-		return nil, err
-	}
-
-	return &scanGroup, nil
 }

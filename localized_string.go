@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// LocalisedStrings : A struct wrapping around a map containing each localised string.
+// LocalisedStrings: A struct wrapping around a map containing each localised string.
 type LocalisedStrings struct {
 	Values map[string]string
 }
@@ -33,7 +33,7 @@ func (l *LocalisedStrings) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// GetLocalString : Get the localised string for a particular language code.
+// GetLocalString: Get the localised string for a particular language code.
 // If the required string is not found, it will return the first entry, or an empty string otherwise.
 func (l *LocalisedStrings) GetLocalString(langCode string) string {
 	// If we cannot find the required code, then return first value.

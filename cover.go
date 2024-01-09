@@ -8,12 +8,13 @@ import (
 )
 
 const (
-	CoverListPath = "cover"
+	CoverListPath = "/cover"
 )
 
-// CoverService : Provides Cover services provided by the API.
+// CoverService: Provides Cover services provided by the API.
 type CoverService service
 
+// Cover: Struct containing information on a cover.
 type Cover struct {
 	ID            string           `json:"id"`
 	Type          RelationshipType `json:"type"`
@@ -21,6 +22,7 @@ type Cover struct {
 	Relationships []*Relationship  `json:"relationships"`
 }
 
+// CoverAttributes: Attributes for a cover.
 type CoverAttributes struct {
 	Volume      *string `json:"volume"`
 	FileName    string  `json:"fileName"`
@@ -31,22 +33,13 @@ type CoverAttributes struct {
 	Locale      string  `json:"locale"`
 }
 
-// List : Get manga covers by ID list.
-// https://api.mangadex.org/docs.html#operation/get-cover
-// TODO: make it generic? just accept a url.Values params?
-func (s *CoverService) List(ids []string, isMangaCover bool) ([]*Cover, error) {
+// List : Get manga cover list.
+// https://api.mangadex.org/docs/redoc.html#tag/Cover/operation/get-cover
+func (s *CoverService) List(params url.Values) ([]*Cover, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = CoverListPath
 
-	params := url.Values{}
-	for _, id := range ids {
-		if isMangaCover {
-			params.Add("manga[]", id)
-		} else {
-			params.Add("ids[]", id)
-		}
-	}
-
+	// Set query parameters
 	u.RawQuery = params.Encode()
 
 	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)

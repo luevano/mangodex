@@ -1,21 +1,28 @@
 package mangodex
 
+/*
 const (
-	GetUserFollowedMangaListPath = "user/follows/manga"
-	GetLoggedUserPath            = "user/me"
+	GetUserFollowedMangaListPath = "/user/follows/manga"
+	GetLoggedUserPath            = "/user/me"
 )
+*/
 
-// UserService : Provides User services provided by the API.
+// UserService: Provides user services provided by the API.
+//
+// Deprecated: Most of the methods have been deprecated or now use a different authentication method.
+// https://api.mangadex.org/docs/redoc.html#tag/User
+//
+// Will add API functionality later if needed. Commented code is heavily outdated.
 type UserService service
 
 /*
-// GetUserFollowedMangaList : Return list of followed Manga.
+// GetUserFollowedMangaList: Return list of followed Manga.
 // https://api.mangadex.org/docs.html#operation/get-user-follows-manga
 func (s *UserService) GetUserFollowedMangaList(limit, offset int, includes []string) (*MangaList, error) {
 	return s.GetUserFollowedMangaListContext(context.Background(), limit, offset, includes)
 }
 
-// GetUserFollowedMangaListContext : GetUserFollowedMangaListPath with custom context.
+// GetUserFollowedMangaListContext: GetUserFollowedMangaListPath with custom context.
 func (s *UserService) GetUserFollowedMangaListContext(ctx context.Context, limit, offset int, includes []string) (*MangaList, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = GetUserFollowedMangaListPath
@@ -34,7 +41,7 @@ func (s *UserService) GetUserFollowedMangaListContext(ctx context.Context, limit
 	return &l, err
 }
 
-// UserResponse : Typical User response.
+// UserResponse: Typical User response.
 type UserResponse struct {
 	Result   string `json:"result"`
 	Response string `json:"response"`
@@ -45,7 +52,7 @@ func (ur *UserResponse) GetResult() string {
 	return ur.Result
 }
 
-// User : Info on a MangaDex user.
+// User: Info on a MangaDex user.
 type User struct {
 	ID            string         `json:"id"`
 	Type          string         `json:"type"`
@@ -53,20 +60,20 @@ type User struct {
 	Relationships []Relationship `json:"relationships"`
 }
 
-// UserAttributes : Attributes of a User.
+// UserAttributes: Attributes of a User.
 type UserAttributes struct {
 	Username string   `json:"username"`
 	Roles    []string `json:"roles"`
 	Version  int      `json:"version"`
 }
 
-// GetLoggedUser : Return logged UserResponse.
+// GetLoggedUser: Return logged UserResponse.
 // https://api.mangadex.org/docs.html#operation/get-user-follows-group
 func (s *UserService) GetLoggedUser() (*UserResponse, error) {
 	return s.GetLoggedUserContext(context.Background())
 }
 
-// GetLoggedUserContext : GetLoggedUser with custom context.
+// GetLoggedUserContext: GetLoggedUser with custom context.
 func (s *UserService) GetLoggedUserContext(ctx context.Context) (*UserResponse, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = GetLoggedUserPath

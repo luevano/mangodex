@@ -12,17 +12,18 @@ const (
 	BaseAPI = "https://api.mangadex.org"
 )
 
+// DexResponse: Generic MangaDex API response type, most responses have this structure.
 type DexResponse struct {
 	Result   string          `json:"result"`
 	Response string          `json:"response"`
-	Volumes  json.RawMessage `json:"volumes"`
+	Volumes  json.RawMessage `json:"volumes"` // TODO: move this to its own Response type
 	Data     json.RawMessage `json:"data"`
 	Limit    int             `json:"limit"`
 	Offset   int             `json:"offset"`
 	Total    int             `json:"total"`
 }
 
-// DexClient : The MangaDex client.
+// DexClient: The MangaDex client.
 type DexClient struct {
 	client *http.Client
 	header http.Header
@@ -31,22 +32,22 @@ type DexClient struct {
 	refreshToken string
 
 	// Services for MangaDex API
-	Auth            *AuthService
+	Auth            *AuthService // Deprecated
 	Manga           *MangaService
-	Volume		*VolumeService
+	Volume          *VolumeService
 	Chapter         *ChapterService
 	Cover           *CoverService
-	User            *UserService
+	User            *UserService // Deprecated
 	AtHome          *AtHomeService
 	ScanlationGroup *ScanlationGroupService
 }
 
-// service : Wrapper for DexClient.
+// service: Wrapper for DexClient.
 type service struct {
 	client *DexClient
 }
 
-// NewDexClient : New anonymous client. To login as an authenticated user, use DexClient.Login.
+// NewDexClient: New anonymous client. To login as an authenticated user, use DexClient.Auth.Login.
 func NewDexClient() *DexClient {
 	// Create client
 	client := http.Client{}
@@ -76,7 +77,7 @@ func NewDexClient() *DexClient {
 	return dex
 }
 
-// Request : Sends a request to the MangaDex API.
+// Request: Sends a request to the MangaDex API.
 func (dex *DexClient) Request(ctx context.Context, method, url string, body io.Reader) (*http.Response, error) {
 	// Create the request
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
@@ -92,35 +93,38 @@ func (dex *DexClient) Request(ctx context.Context, method, url string, body io.R
 	if err != nil {
 		return nil, err
 	} else if resp.StatusCode != 200 {
+		// If there was non 200 status code, close body when done.
+		defer resp.Body.Close()
 		// Decode to an ErrorResponse struct.
 		var er ErrorResponse
-		// TODO: this fails on 503 errors for example, it tries to decode a non-json response
-		// looks like mangadex error responses changed
-		if err = json.NewDecoder(resp.Body).Decode(&er); err != nil {
+		// TODO: fix decoder failing on maintenance pages;
+		// looks like it tries to decode a non-json response.
+		err = json.NewDecoder(resp.Body).Decode(&er)
+		if err != nil {
 			return nil, err
 		}
-		defer func(Body io.ReadCloser) {
-			_ = Body.Close()
-		}(resp.Body)
+
 		return nil, fmt.Errorf("non-200 status code -> (%d) %s", resp.StatusCode, er.GetErrors())
 	}
+
 	return resp, nil
 }
 
-// RequestAndDecode : Convenience wrapper to also decode response to required data type
+// RequestAndDecode: Convenience wrapper to also decode response to DexResponse.
 func (dex *DexClient) RequestAndDecode(ctx context.Context, method, url string, body io.Reader) (*DexResponse, error) {
 	// Get the response of the request.
 	resp, err := dex.Request(ctx, method, url, body)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
-	// Decode the request into the specified ResponseType.
+	// Decode the request into DexResponse.
 	var res DexResponse
 	err = json.NewDecoder(resp.Body).Decode(&res)
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
-	}(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 
-	return &res, err
+	return &res, nil
 }

@@ -1,6 +1,6 @@
 package mangodex
 
-// AuthorAttributes : Attributes for an Author.
+// AuthorAttributes: Attributes for an author.
 type AuthorAttributes struct {
 	Name      string           `json:"name"`
 	ImageURL  string           `json:"imageUrl"`

@@ -1,16 +1,23 @@
 package mangodex
 
+/*
 const (
-	LoginPath        = "auth/login"
-	LogoutPath       = "auth/logout"
-	RefreshTokenPath = "auth/refresh"
+	LoginPath        = "/auth/login"
+	LogoutPath       = "/auth/logout"
+	RefreshTokenPath = "/auth/refresh"
 )
+*/
 
-// AuthService : Provides Auth services provided by the API.
+// AuthService: Provides auth services provided by the API.
+//
+// Deprecated: Authentication is now done by registering a personal client and using an auth-token for all requests that support it.
+// https://api.mangadex.org/docs/02-authentication/personal-clients/.
+//
+// Will add API functionality later. Commented code is heavily outdated.
 type AuthService service
 
 /*
-// AuthResponse : Typical AuthService response.
+// AuthResponse: Typical AuthService response.
 type AuthResponse struct {
 	Result  string  `json:"result"`
 	Token   token   `json:"token"`
@@ -21,19 +28,19 @@ func (ar AuthResponse) GetResult() string {
 	return ar.Result
 }
 
-// token : MangaDex token. Includes session and refresh token.
+// token: MangaDex token. Includes session and refresh token.
 type token struct {
 	Session string `json:"session"`
 	Refresh string `json:"refresh"`
 }
 
-// Login : Login to MangaDex.
+// Login: Login to MangaDex.
 // https://api.mangadex.org/docs.html#operation/post-auth-login
 func (s *AuthService) Login(user, pwd string) error {
 	return s.LoginContext(context.Background(), user, pwd)
 }
 
-// LoginContext : Login with custom context.
+// LoginContext: Login with custom context.
 func (s *AuthService) LoginContext(ctx context.Context, user, pwd string) error {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = LoginPath
@@ -59,13 +66,13 @@ func (s *AuthService) LoginContext(ctx context.Context, user, pwd string) error 
 	return nil
 }
 
-// Logout : Logout of MangaDex and invalidates all tokens.
+// Logout: Logout of MangaDex and invalidates all tokens.
 // https://api.mangadex.org/docs.html#operation/post-auth-logout
 func (s *AuthService) Logout() error {
 	return s.LogoutContext(context.Background())
 }
 
-// LogoutContext : Logout with custom context.
+// LogoutContext: Logout with custom context.
 func (s *AuthService) LogoutContext(ctx context.Context) error {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = LogoutPath
@@ -81,13 +88,13 @@ func (s *AuthService) LogoutContext(ctx context.Context) error {
 	return nil
 }
 
-// RefreshSessionToken : Refresh session token using refresh token.
+// RefreshSessionToken: Refresh session token using refresh token.
 // https://api.mangadex.org/docs.html#operation/post-auth-refresh
 func (s *AuthService) RefreshSessionToken() error {
 	return s.RefreshSessionTokenContext(context.Background())
 }
 
-// RefreshSessionTokenContext : refreshToken with custom context.
+// RefreshSessionTokenContext: refreshToken with custom context.
 func (s *AuthService) RefreshSessionTokenContext(ctx context.Context) error {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = RefreshTokenPath
@@ -112,17 +119,17 @@ func (s *AuthService) RefreshSessionTokenContext(ctx context.Context) error {
 	return nil
 }
 
-// IsLoggedIn : Return true when client logged in and false otherwise.
+// IsLoggedIn: Return true when client logged in and false otherwise.
 func (s *AuthService) IsLoggedIn() bool {
 	return s.client.header.Get("Authorization") != ""
 }
 
-// GetRefreshToken : Get the current refresh token of the client.
+// GetRefreshToken: Get the current refresh token of the client.
 func (s *AuthService) GetRefreshToken() string {
 	return s.client.refreshToken
 }
 
-// SetRefreshToken : Set the refresh token for the client.
+// SetRefreshToken: Set the refresh token for the client.
 func (s *AuthService) SetRefreshToken(refreshToken string) {
 	s.client.refreshToken = refreshToken
 }

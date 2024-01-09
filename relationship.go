@@ -3,10 +3,11 @@ package mangodex
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/google/uuid"
 )
 
-// Relationship : Struct containing relationships, with optional attributes for the relation.
+// Relationship: Struct containing relationships, with optional attributes for the relation.
 type Relationship struct {
 	ID         uuid.UUID        `json:"id"`
 	Type       RelationshipType `json:"type"`

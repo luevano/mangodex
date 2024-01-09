@@ -9,13 +9,16 @@ import (
 )
 
 const (
-	MangaPath                = "manga/%s"
-	MangaListPath            = "manga"
-	CheckIfMangaFollowedPath = "user/follows/manga/%s"
-	ToggleMangaFollowPath    = "manga/%s/follow"
+	MangaPath     = "/manga/%s"
+	MangaListPath = "/manga"
+	// CheckIfMangaFollowedPath = "/user/follows/manga/%s"
+	// ToggleMangaFollowPath    = "/manga/%s/follow"
 )
 
-// Manga : Struct containing information on a Manga.
+// MangaService: Provides Manga services provided by the API.
+type MangaService service
+
+// Manga: Struct containing information on a manga.
 type Manga struct {
 	ID            string           `json:"id"`
 	Type          RelationshipType `json:"type"`
@@ -23,7 +26,7 @@ type Manga struct {
 	Relationships []*Relationship  `json:"relationships"`
 }
 
-// GetTitle : Get title of the Manga.
+// GetTitle: Get title of the manga.
 func (m *Manga) GetTitle(langCode string) string {
 	if title := m.Attributes.Title.GetLocalString(langCode); title != "" {
 		return title
@@ -31,12 +34,12 @@ func (m *Manga) GetTitle(langCode string) string {
 	return m.Attributes.AltTitles.GetLocalString(langCode)
 }
 
-// GetDescription : Get description of the Manga.
+// GetDescription: Get description of the manga.
 func (m *Manga) GetDescription(langCode string) string {
 	return m.Attributes.Description.GetLocalString(langCode)
 }
 
-// MangaAttributes : Attributes for a Manga.
+// MangaAttributes: Attributes for a manga.
 type MangaAttributes struct {
 	Title                  LocalisedStrings   `json:"title"`
 	AltTitles              LocalisedStrings   `json:"altTitles"`
@@ -57,11 +60,30 @@ type MangaAttributes struct {
 	UpdatedAt              string             `json:"updatedAt"`
 }
 
-// MangaService : Provides Manga services provided by the API.
-type MangaService service
+// Get: Get a manga by manga id.
+// https://api.mangadex.org/docs/redoc.html#tag/Manga/operation/get-manga-id
+func (s *MangaService) Get(id string, params url.Values) (*Manga, error) {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = fmt.Sprintf(MangaPath, id)
 
-// List : Get a list of Manga.
-// https://api.mangadex.org/docs.html#operation/get-search-manga
+	// Set query parameters
+	u.RawQuery = params.Encode()
+
+	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	var manga Manga
+	err = json.Unmarshal(res.Data, &manga)
+	if err != nil {
+		return nil, err
+	}
+
+	return &manga, nil
+}
+
+// List: Get manga list.
+// https://api.mangadex.org/docs/redoc.html#tag/Manga/operation/get-search-manga
 func (s *MangaService) List(params url.Values) ([]*Manga, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = MangaListPath
@@ -82,24 +104,9 @@ func (s *MangaService) List(params url.Values) ([]*Manga, error) {
 	return mangaList, nil
 }
 
-// Get : Get a manga.
-func (s *MangaService) Get(id string) (*Manga, error) {
-	u, _ := url.Parse(BaseAPI)
-	u.Path = fmt.Sprintf(MangaPath, id)
-
-	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-	var manga Manga
-	err = json.Unmarshal(res.Data, &manga)
-	if err != nil {
-		return nil, err
-	}
-
-	return &manga, nil
-}
-
+// TODO: update viable methods later. Most of this is either deprecated
+// or the API changed drastically (due to auth being different).
+// The code is heavily outdated.
 /*
 // CheckIfMangaFollowed : Check if a user follows a manga.
 func (s *MangaService) CheckIfMangaFollowed(id string) (bool, error) {
