@@ -47,5 +47,5 @@ func (a *Relationship) UnmarshalJSON(data []byte) error {
 				typ.Type, err.Error(), string(data))
 		}
 	}
-	return err
+	return nil
 }

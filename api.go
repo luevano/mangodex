@@ -16,7 +16,6 @@ const (
 type DexResponse struct {
 	Result   string          `json:"result"`
 	Response string          `json:"response"`
-	Volumes  json.RawMessage `json:"volumes"` // TODO: move this to its own Response type
 	Data     json.RawMessage `json:"data"`
 	Limit    int             `json:"limit"`
 	Offset   int             `json:"offset"`
@@ -92,19 +91,23 @@ func (dex *DexClient) Request(ctx context.Context, method, url string, body io.R
 	resp, err := dex.client.Do(req)
 	if err != nil {
 		return nil, err
-	} else if resp.StatusCode != 200 {
+	}
+
+	if resp.StatusCode != 200 {
 		// If there was non 200 status code, close body when done.
 		defer resp.Body.Close()
 		// Decode to an ErrorResponse struct.
 		var er ErrorResponse
-		// TODO: fix decoder failing on maintenance pages;
-		// looks like it tries to decode a non-json response.
+		var errMsg string
 		err = json.NewDecoder(resp.Body).Decode(&er)
+		// Sometimes the error page is just plain HTML, so it can't be decoded into ErrorResponse
 		if err != nil {
-			return nil, err
+			errMsg = fmt.Sprintf("failed to decode into ErrorResponse (HTML response?), error: %s", err.Error())
+		} else {
+			errMsg = er.GetErrors()
 		}
 
-		return nil, fmt.Errorf("non-200 status code -> (%d) %s", resp.StatusCode, er.GetErrors())
+		return nil, fmt.Errorf("non-200 status code -> (%d) %s", resp.StatusCode, errMsg)
 	}
 
 	return resp, nil

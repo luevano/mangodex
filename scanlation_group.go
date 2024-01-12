@@ -78,7 +78,8 @@ func (s ScanlationGroupService) Get(id string, params url.Values) (*ScanlationGr
 	return &scanGroup, nil
 }
 
-// TODO: change this to use url.Values instead of custom option struct. This is the only method that has its custom options. Or add custom options to all other methods.
+// TODO: change this to use url.Values instead of custom option struct.
+// This is the only method that has its custom options. Or add custom options to all other methods.
 // List: Get scanlation group list.
 // https://api.mangadex.org/docs/redoc.html#tag/ScanlationGroup/operation/get-search-group
 func (s ScanlationGroupService) List(options *ScanlationGroupListOptions) ([]*ScanlationGroup, error) {
