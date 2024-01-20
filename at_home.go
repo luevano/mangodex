@@ -8,12 +8,9 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 )
-
-// TODO: rename/refactor to return actual API response instead of selected "pages"
 
 const (
 	GetMDHomeURLPath = "/at-home/server/%s"
@@ -23,8 +20,8 @@ const (
 // AtHomeService: Provides MangaDex@Home services provided by the API.
 type AtHomeService service
 
-// MDHomeServerResponse: A response for getting a server URL to get chapters.
-type MDHomeServerResponse struct {
+// AtHomeServerResponse: A response for getting a server URL to get chapters.
+type AtHomeServerResponse struct {
 	Result  string      `json:"result"`
 	BaseURL string      `json:"baseUrl"`
 	Chapter ChapterData `json:"chapter"`
@@ -37,27 +34,21 @@ type ChapterData struct {
 	DataSaver []string `json:"dataSaver"`
 }
 
-// MDHomeClient: Client for interfacing with MangaDex@Home.
-//
-// TODO: Provide ChapterData itself instead of selected Pages
-type MDHomeClient struct {
-	client  *http.Client
-	quality string
+// AtHomeServer: Client for interfacing with MangaDex@Home.
+type AtHomeServer struct {
+	client *http.Client
+
 	BaseURL string
-	Hash    string
-	Pages   []string
+	Chapter ChapterData
 }
 
-// NewMDHomeClient: Get MangaDex@Home client for a chapter.
+// Get: Get MangaDex@Home server for a chapter.
 //
 // https://api.mangadex.org/docs/redoc.html#tag/AtHome/operation/get-at-home-server-chapterId
-func (s *AtHomeService) NewMDHomeClient(chapterID string, quality string, forcePort443 bool) (*MDHomeClient, error) {
+func (s *AtHomeService) Get(id string, params url.Values) (*AtHomeServer, error) {
 	u, _ := url.Parse(BaseAPI)
-	u.Path = fmt.Sprintf(GetMDHomeURLPath, chapterID)
-
-	q := u.Query()
-	q.Set("forcePort443", strconv.FormatBool(forcePort443))
-	u.RawQuery = q.Encode()
+	u.Path = fmt.Sprintf(GetMDHomeURLPath, id)
+	u.RawQuery = params.Encode()
 
 	resp, err := s.client.Request(context.Background(), http.MethodGet, u.String(), nil)
 	if err != nil {
@@ -65,29 +56,22 @@ func (s *AtHomeService) NewMDHomeClient(chapterID string, quality string, forceP
 	}
 	defer resp.Body.Close()
 
-	var res MDHomeServerResponse
+	var res AtHomeServerResponse
 	err = json.NewDecoder(resp.Body).Decode(&res)
 	if err != nil {
 		return nil, err
 	}
 
-	pages := res.Chapter.Data
-	if quality == "data-saver" {
-		pages = res.Chapter.DataSaver
-	}
-
-	return &MDHomeClient{
+	return &AtHomeServer{
 		client:  &http.Client{},
-		quality: quality,
 		BaseURL: res.BaseURL,
-		Hash:    res.Chapter.Hash,
-		Pages:   pages,
+		Chapter: res.Chapter,
 	}, nil
 }
 
 // GetChapterPage: Return page data for a chapter with the filename of that page.
-func (c *MDHomeClient) GetChapterPage(filename string) ([]byte, error) {
-	path := strings.Join([]string{c.BaseURL, c.quality, c.Hash, filename}, "/")
+func (s *AtHomeServer) GetChapterPage(quality, filename string) ([]byte, error) {
+	path := strings.Join([]string{s.BaseURL, quality, s.Chapter.Hash, filename}, "/")
 	ctx := context.Background()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, path, nil)
@@ -97,7 +81,7 @@ func (c *MDHomeClient) GetChapterPage(filename string) ([]byte, error) {
 
 	// Start timing how long to get all bytes for the file.
 	start := time.Now()
-	resp, err := c.client.Do(req)
+	resp, err := s.client.Do(req)
 	// If we cannot not get chapter page successfully.
 	if err != nil || resp.StatusCode != 200 {
 		if err == nil {
@@ -121,7 +105,7 @@ func (c *MDHomeClient) GetChapterPage(filename string) ([]byte, error) {
 			Duration: time.Since(start).Milliseconds(),
 			Cached:   strings.HasPrefix(resp.Header.Get("X-Cache"), "HIT"),
 		}
-		_, _ = c.reportContext(ctx, r)
+		_, _ = s.reportContext(ctx, r)
 	}()
 
 	return fileData, nil
@@ -137,7 +121,7 @@ type reportPayload struct {
 }
 
 // reportContext: Report success of getting chapter page data.
-func (c *MDHomeClient) reportContext(ctx context.Context, r *reportPayload) (*http.Response, error) {
+func (s *AtHomeServer) reportContext(ctx context.Context, r *reportPayload) (*http.Response, error) {
 	rBytes, err := json.Marshal(r)
 	if err != nil {
 		return nil, err
@@ -146,5 +130,5 @@ func (c *MDHomeClient) reportContext(ctx context.Context, r *reportPayload) (*ht
 	if err != nil {
 		return nil, err
 	}
-	return c.client.Do(req)
+	return s.client.Do(req)
 }
