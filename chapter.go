@@ -51,15 +51,15 @@ type ChapterAttributes struct {
 	CreatedAt          string  `json:"createdAt"`
 	UpdatedAt          string  `json:"updatedAt"`
 	PublishAt          string  `json:"publishAt"`
+	ReadableAt         string  `json:"readableAt"`
 }
 
 // Get: Get chapter by chapter id.
+//
 // https://api.mangadex.org/docs/redoc.html#tag/Chapter/operation/get-chapter-id
 func (s *ChapterService) Get(id string, params url.Values) (chapter *Chapter, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(ChapterPath, id)
-
-	// Set query parameters
 	u.RawQuery = params.Encode()
 
 	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
@@ -75,12 +75,11 @@ func (s *ChapterService) Get(id string, params url.Values) (chapter *Chapter, er
 }
 
 // List: Get chapter list.
+//
 // https://api.mangadex.org/docs/redoc.html#tag/Chapter/operation/get-chapter
 func (s *ChapterService) List(params url.Values) (chapterList []*Chapter, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = ChapterListPath
-
-	// Set query parameters
 	u.RawQuery = params.Encode()
 
 	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
@@ -95,14 +94,14 @@ func (s *ChapterService) List(params url.Values) (chapterList []*Chapter, err er
 	return chapterList, nil
 }
 
-// TODO: move this to manga.go?
 // GetMangaChapters: Get a list of chapters for a manga by manga id.
+//
 // https://api.mangadex.org/docs/redoc.html#tag/Manga/operation/get-manga-id-feed
+//
+// TODO: move this to manga.go?
 func (s *ChapterService) GetMangaChapters(id string, params url.Values) (chapterList []*Chapter, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(MangaChaptersPath, id)
-
-	// Set request parameters
 	u.RawQuery = params.Encode()
 
 	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)

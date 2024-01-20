@@ -61,12 +61,11 @@ type MangaAttributes struct {
 }
 
 // Get: Get a manga by manga id.
+//
 // https://api.mangadex.org/docs/redoc.html#tag/Manga/operation/get-manga-id
 func (s *MangaService) Get(id string, params url.Values) (*Manga, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(MangaPath, id)
-
-	// Set query parameters
 	u.RawQuery = params.Encode()
 
 	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
@@ -83,12 +82,11 @@ func (s *MangaService) Get(id string, params url.Values) (*Manga, error) {
 }
 
 // List: Get manga list.
+//
 // https://api.mangadex.org/docs/redoc.html#tag/Manga/operation/get-search-manga
 func (s *MangaService) List(params url.Values) ([]*Manga, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = MangaListPath
-
-	// Set query parameters
 	u.RawQuery = params.Encode()
 
 	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)

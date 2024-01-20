@@ -37,17 +37,16 @@ type VolumeChapter struct {
 	Count   int      `json:"count"`
 }
 
-// TODO: integrate manga/id/aggregate to manga.go?
 // List: Get a list of manga volumes.
+//
 // https://api.mangadex.org/docs/redoc.html#tag/Manga/operation/get-manga-aggregate
+//
+// TODO: integrate manga/id/aggregate to manga.go?
 func (s *VolumeService) List(id string, params url.Values) (map[string]*Volume, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(MangaAggregatePath, id)
-
-	// Set query parameters
 	u.RawQuery = params.Encode()
 
-	// Get VolumeResponse
 	res, err := s.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err

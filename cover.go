@@ -34,12 +34,11 @@ type CoverAttributes struct {
 }
 
 // List : Get manga cover list.
+//
 // https://api.mangadex.org/docs/redoc.html#tag/Cover/operation/get-cover
 func (s *CoverService) List(params url.Values) ([]*Cover, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = CoverListPath
-
-	// Set query parameters
 	u.RawQuery = params.Encode()
 
 	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)

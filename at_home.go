@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+// TODO: rename/refactor to return actual API response instead of selected "pages"
+
 const (
 	GetMDHomeURLPath = "/at-home/server/%s"
 	MDHomeReportURL  = "https://api.mangadex.network/report"
@@ -28,10 +30,6 @@ type MDHomeServerResponse struct {
 	Chapter ChapterData `json:"chapter"`
 }
 
-func (r *MDHomeServerResponse) GetResult() string {
-	return r.Result
-}
-
 // ChapterData: Struct containing data for the chapter's pages.
 type ChapterData struct {
 	Hash      string   `json:"hash"`
@@ -40,6 +38,8 @@ type ChapterData struct {
 }
 
 // MDHomeClient: Client for interfacing with MangaDex@Home.
+//
+// TODO: Provide ChapterData itself instead of selected Pages
 type MDHomeClient struct {
 	client  *http.Client
 	quality string
@@ -49,12 +49,12 @@ type MDHomeClient struct {
 }
 
 // NewMDHomeClient: Get MangaDex@Home client for a chapter.
+//
 // https://api.mangadex.org/docs/redoc.html#tag/AtHome/operation/get-at-home-server-chapterId
 func (s *AtHomeService) NewMDHomeClient(chapterID string, quality string, forcePort443 bool) (*MDHomeClient, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(GetMDHomeURLPath, chapterID)
 
-	// Set query parameters
 	q := u.Query()
 	q.Set("forcePort443", strconv.FormatBool(forcePort443))
 	u.RawQuery = q.Encode()
@@ -63,17 +63,14 @@ func (s *AtHomeService) NewMDHomeClient(chapterID string, quality string, forceP
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	var res MDHomeServerResponse
 	err = json.NewDecoder(resp.Body).Decode(&res)
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
-	}(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	// Set the required pages data for required quality.
 	pages := res.Chapter.Data
 	if quality == "data-saver" {
 		pages = res.Chapter.DataSaver
@@ -101,24 +98,22 @@ func (c *MDHomeClient) GetChapterPage(filename string) ([]byte, error) {
 	// Start timing how long to get all bytes for the file.
 	start := time.Now()
 	resp, err := c.client.Do(req)
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
-	}(resp.Body)
-
-	var fileData []byte
-	// If we cannot not get chapter successfully
+	// If we cannot not get chapter page successfully.
 	if err != nil || resp.StatusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("%d status code", resp.StatusCode)
+			err = fmt.Errorf("%d status code: failed to get chapter page data", resp.StatusCode)
 		}
 	}
+	defer resp.Body.Close()
 
-	// Read file data.
+	var fileData []byte
 	fileData, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	// Send report in the background.
 	go func() {
-		// Create the payload to send.
 		r := &reportPayload{
 			URL:      path,
 			Success:  err == nil,
@@ -126,11 +121,10 @@ func (c *MDHomeClient) GetChapterPage(filename string) ([]byte, error) {
 			Duration: time.Since(start).Milliseconds(),
 			Cached:   strings.HasPrefix(resp.Header.Get("X-Cache"), "HIT"),
 		}
-
-		_, _ = c.reportContext(ctx, r) // Send report
+		_, _ = c.reportContext(ctx, r)
 	}()
 
-	return fileData, err
+	return fileData, nil
 }
 
 // reportPayload: Required fields for reporting page download result.

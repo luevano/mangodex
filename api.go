@@ -1,3 +1,4 @@
+// Package mangodex provides an API wrapper for MangaDex v5.10.0 API.
 package mangodex
 
 import (
@@ -28,9 +29,9 @@ type DexClient struct {
 	header http.Header
 
 	common       service
-	refreshToken string
+	refreshToken string // Unused
 
-	// Services for MangaDex API
+	// Services for MangaDex API.
 	Auth            *AuthService // Deprecated
 	Manga           *MangaService
 	Volume          *VolumeService
@@ -46,21 +47,16 @@ type service struct {
 	client *DexClient
 }
 
-// NewDexClient: New anonymous client. To login as an authenticated user, use DexClient.Auth.Login.
+// NewDexClient: New MangaDex client.
 func NewDexClient() *DexClient {
-	// Create client
 	client := http.Client{}
-
-	// Create header
 	header := http.Header{}
-	header.Set("Content-Type", "application/json") // Set default content type.
+	header.Set("Content-Type", "application/json")
 
-	// Create the new client
 	dex := &DexClient{
 		client: &client,
 		header: header,
 	}
-	// Set the common client
 	dex.common.client = dex
 
 	// Reuse the common client for the other services
@@ -78,25 +74,19 @@ func NewDexClient() *DexClient {
 
 // Request: Sends a request to the MangaDex API.
 func (dex *DexClient) Request(ctx context.Context, method, url string, body io.Reader) (*http.Response, error) {
-	// Create the request
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return nil, err
 	}
-
-	// Set header for request.
 	req.Header = dex.header
 
-	// Send request.
 	resp, err := dex.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
 	if resp.StatusCode != 200 {
-		// If there was non 200 status code, close body when done.
 		defer resp.Body.Close()
-		// Decode to an ErrorResponse struct.
 		var er ErrorResponse
 		var errMsg string
 		err = json.NewDecoder(resp.Body).Decode(&er)
@@ -113,16 +103,14 @@ func (dex *DexClient) Request(ctx context.Context, method, url string, body io.R
 	return resp, nil
 }
 
-// RequestAndDecode: Convenience wrapper to also decode response to DexResponse.
+// RequestAndDecode: Convenience wrapper to also decode response to DexResponse type.
 func (dex *DexClient) RequestAndDecode(ctx context.Context, method, url string, body io.Reader) (*DexResponse, error) {
-	// Get the response of the request.
 	resp, err := dex.Request(ctx, method, url, body)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	// Decode the request into DexResponse.
 	var res DexResponse
 	err = json.NewDecoder(resp.Body).Decode(&res)
 	if err != nil {
