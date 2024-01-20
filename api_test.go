@@ -73,15 +73,11 @@ func TestGroupGet(t *testing.T) {
 }
 
 func TestGroupList(t *testing.T) {
-	_, err := client.ScanlationGroup.List(&ScanlationGroupListOptions{
-		Limit:           100,
-		Offset:          0,
-		Ids:             nil,
-		Name:            "laughing",
-		FocusedLanguage: "",
-		Includes:        nil,
-		Order:           nil,
-	})
+	params := url.Values{}
+	params.Set("limit", strconv.Itoa(100))
+	params.Set("offset", strconv.Itoa(0))
+	params.Set("name", "laughing")
+	_, err := client.ScanlationGroup.List(params)
 	if err != nil {
 		t.Errorf("Getting Group List failed: %s\n", err.Error())
 	}

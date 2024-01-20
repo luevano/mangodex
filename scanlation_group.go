@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 )
 
 const (
@@ -45,17 +44,6 @@ type ScanlationGroupAttributes struct {
 	UpdatedAt       string           `json:"updatedAt"`
 }
 
-// ScanlationGroupListOptions: Options for the scanlation group list.
-type ScanlationGroupListOptions struct {
-	Limit           int       `json:"limit"`
-	Offset          int       `json:"offset"`
-	Ids             []string  `json:"ids"`
-	Name            string    `json:"name"`
-	FocusedLanguage string    `json:"focusedLanguage"`
-	Includes        []string  `json:"includes"`
-	Order           *GetOrder `json:"order,omitempty"`
-}
-
 // Get: Get scanlation group by scanlation group id.
 //
 // https://api.mangadex.org/docs/redoc.html#tag/ScanlationGroup/operation/get-group-id
@@ -80,33 +68,10 @@ func (s ScanlationGroupService) Get(id string, params url.Values) (*ScanlationGr
 // List: Get scanlation group list.
 //
 // https://api.mangadex.org/docs/redoc.html#tag/ScanlationGroup/operation/get-search-group
-//
-// TODO: change this to use url.Values instead of custom option struct.
-// This is the only method that has its custom options. Or add custom options to all other methods.
-func (s ScanlationGroupService) List(options *ScanlationGroupListOptions) ([]*ScanlationGroup, error) {
+func (s ScanlationGroupService) List(params url.Values) ([]*ScanlationGroup, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(GroupList)
-	q := u.Query()
-
-	if options.FocusedLanguage != "" {
-		q.Add("focusedLanguage", options.FocusedLanguage)
-	}
-	if options.Name != "" {
-		q.Add("name", options.Name)
-	}
-	q.Add("limit", strconv.Itoa(options.Limit))
-	q.Add("offset", strconv.Itoa(options.Offset))
-	for _, i := range options.Ids {
-		q.Add("ids[]", i)
-	}
-	for _, i := range options.Includes {
-		q.Add("includes[]", i)
-	}
-	if options.Order != nil {
-		// data, _ := json.Marshal(options.Order)
-		// q.Add("order", string(data))
-	}
-	u.RawQuery = q.Encode()
+	u.RawQuery = params.Encode()
 
 	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
 	if err != nil {
