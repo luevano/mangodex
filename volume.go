@@ -80,9 +80,9 @@ func (s *VolumeService) List(id string, params url.Values) (map[string]*Volume, 
 
 // RequestAndDecode: Convenience wrapper to also decode response to VolumeResponse.
 // Not to be confused with DexClient.RequestAndDecode, which is for generic DexResponse types.
-func (v *VolumeService) RequestAndDecode(ctx context.Context, method, url string, body io.Reader) (*VolumeResponse, error) {
+func (s *VolumeService) RequestAndDecode(ctx context.Context, method, url string, body io.Reader) (*VolumeResponse, error) {
 	// Get the response of the request.
-	resp, err := v.client.Request(ctx, method, url, body)
+	resp, err := s.client.Request(ctx, method, url, body)
 	if err != nil {
 		return nil, err
 	}

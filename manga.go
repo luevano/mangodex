@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 )
@@ -14,6 +15,13 @@ const (
 	// CheckIfMangaFollowedPath = "/user/follows/manga/%s"
 	// ToggleMangaFollowPath    = "/manga/%s/follow"
 )
+
+// MangaResponse: Manga response type, this differs from the common DexResponse type. Only used for some responses.
+type MangaResponse struct {
+	Result   string          `json:"result"`
+	Response string          `json:"response"`
+	Data     json.RawMessage `json:"data"`
+}
 
 // MangaService: Provides Manga services provided by the API.
 type MangaService service
@@ -68,7 +76,7 @@ func (s *MangaService) Get(id string, params url.Values) (*Manga, error) {
 	u.Path = fmt.Sprintf(MangaPath, id)
 	u.RawQuery = params.Encode()
 
-	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	res, err := s.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -147,3 +155,23 @@ func (s *MangaService) ToggleMangaFollowStatusContext(ctx context.Context, id st
 	return &r, err
 }
 */
+
+// RequestAndDecode: Convenience wrapper to also decode response to MangaResponse.
+// Not to be confused with DexClient.RequestAndDecode, which is for generic DexResponse types.
+func (s *MangaService) RequestAndDecode(ctx context.Context, method, url string, body io.Reader) (*MangaResponse, error) {
+	// Get the response of the request.
+	resp, err := s.client.Request(ctx, method, url, body)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Decode the request into MangaResponse.
+	var res MangaResponse
+	err = json.NewDecoder(resp.Body).Decode(&res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}

@@ -35,6 +35,8 @@ func (a *Relationship) UnmarshalJSON(data []byte) error {
 		a.Attributes = &ScanlationGroupAttributes{}
 	case RelationshipTypeCoverArt:
 		a.Attributes = &CoverAttributes{}
+	case RelationshipTypeUser:
+		a.Attributes = &UserAttributes{}
 	default:
 		a.Attributes = &json.RawMessage{}
 	}

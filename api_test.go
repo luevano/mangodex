@@ -142,3 +142,17 @@ func TestVolumeEmpty(t *testing.T) {
 	}
 	t.Log(resp)
 }
+
+//
+// user.go
+//
+
+func TestUser(t *testing.T) {
+	// Newtonius uuid
+	id := "904b5ab6-7e00-4b7e-a6c6-3dda7860b69e"
+	resp, err := client.User.Get(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(resp)
+}

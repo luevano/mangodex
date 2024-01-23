@@ -1,56 +1,29 @@
 package mangodex
 
-/*
-const (
-	GetUserFollowedMangaListPath = "/user/follows/manga"
-	GetLoggedUserPath            = "/user/me"
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
 )
-*/
+
+const (
+	GetUserPath = "/user/%s"
+	// GetUserFollowedMangaListPath = "/user/follows/manga"
+	// GetLoggedUserPath            = "/user/me"
+)
+
+// UserResponse: User response type, this differs from the common DexResponse type.
+type UserResponse struct {
+	Result   string          `json:"result"`
+	Response string          `json:"response"`
+	Data     json.RawMessage `json:"data"`
+}
 
 // UserService: Provides user services provided by the API.
-//
-// Deprecated: Most of the methods have been deprecated or now use a different authentication method.
-// https://api.mangadex.org/docs/redoc.html#tag/User
-//
-// Will add API functionality later if needed. Commented code is heavily outdated.
 type UserService service
-
-/*
-// GetUserFollowedMangaList: Return list of followed Manga.
-// https://api.mangadex.org/docs.html#operation/get-user-follows-manga
-func (s *UserService) GetUserFollowedMangaList(limit, offset int, includes []string) (*MangaList, error) {
-	return s.GetUserFollowedMangaListContext(context.Background(), limit, offset, includes)
-}
-
-// GetUserFollowedMangaListContext: GetUserFollowedMangaListPath with custom context.
-func (s *UserService) GetUserFollowedMangaListContext(ctx context.Context, limit, offset int, includes []string) (*MangaList, error) {
-	u, _ := url.Parse(BaseAPI)
-	u.Path = GetUserFollowedMangaListPath
-
-	// Set required query parameters
-	q := u.Query()
-	q.Add("limit", strconv.Itoa(limit))
-	q.Add("offset", strconv.Itoa(offset))
-	for _, i := range includes {
-		q.Add("includes[]", i)
-	}
-	u.RawQuery = q.Encode()
-
-	var l MangaList
-	err := s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &l)
-	return &l, err
-}
-
-// UserResponse: Typical User response.
-type UserResponse struct {
-	Result   string `json:"result"`
-	Response string `json:"response"`
-	Data     User   `json:"data"`
-}
-
-func (ur *UserResponse) GetResult() string {
-	return ur.Result
-}
 
 // User: Info on a MangaDex user.
 type User struct {
@@ -67,19 +40,86 @@ type UserAttributes struct {
 	Version  int      `json:"version"`
 }
 
-// GetLoggedUser: Return logged UserResponse.
-// https://api.mangadex.org/docs.html#operation/get-user-follows-group
-func (s *UserService) GetLoggedUser() (*UserResponse, error) {
-	return s.GetLoggedUserContext(context.Background())
+// Get: Get user by id.
+//
+// https://api.mangadex.org/docs/redoc.html#tag/User/operation/get-user-id
+func (s *UserService) Get(id string) (*User, error) {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = fmt.Sprintf(GetUserPath, id)
+
+	res, err := s.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	var user User
+	err = json.Unmarshal(res.Data, &user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, err
 }
 
-// GetLoggedUserContext: GetLoggedUser with custom context.
-func (s *UserService) GetLoggedUserContext(ctx context.Context) (*UserResponse, error) {
+// TODO: enable once Auth service is fixed.
+/*
+// GetUserFollowedMangaList: Get list of followed manga.
+//
+// https://api.mangadex.org/docs/redoc.html#tag/Follows/operation/get-user-follows-manga
+func (s *UserService) GetUserFollowedMangaList(params url.Values) ([]*Manga, error) {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = GetUserFollowedMangaListPath
+	u.RawQuery = params.Encode()
+
+	res, err := s.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	var mangaList []*Manga
+	err = json.Unmarshal(res.Data, &mangaList)
+	if err != nil {
+		return nil, err
+	}
+
+	return mangaList, err
+}
+
+// GetLoggedUser: Get logged user.
+//
+// https://api.mangadex.org/docs/redoc.html#tag/User/operation/get-user-me
+func (s *UserService) GetLoggedUser() (*User, error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = GetLoggedUserPath
 
-	var r UserResponse
-	err := s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &r)
-	return &r, err
+	res, err := s.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	var user User
+	err = json.Unmarshal(res.Data, &user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, err
 }
 */
+
+// RequestAndDecode: Convenience wrapper to also decode response to UserResponse.
+// Not to be confused with DexClient.RequestAndDecode, which is for generic DexResponse types.
+func (s *UserService) RequestAndDecode(ctx context.Context, method, url string, body io.Reader) (*UserResponse, error) {
+	// Get the response of the request.
+	resp, err := s.client.Request(ctx, method, url, body)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Decode the request into UserResponse.
+	var res UserResponse
+	err = json.NewDecoder(resp.Body).Decode(&res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
