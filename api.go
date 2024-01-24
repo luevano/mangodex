@@ -85,7 +85,13 @@ func (c *DexClient) Request(ctx context.Context, method, url string, body io.Rea
 		return nil, err
 	}
 
-	if resp.StatusCode != 200 {
+	switch resp.StatusCode {
+	case 200:
+		return resp, nil
+	case 503:
+		// Special case for maintenance responses.
+		return nil, fmt.Errorf("MangaDex is temporarily down for maintenance.")
+	default:
 		defer resp.Body.Close()
 		var er ErrorResponse
 		var errMsg string
@@ -99,8 +105,6 @@ func (c *DexClient) Request(ctx context.Context, method, url string, body io.Rea
 
 		return nil, fmt.Errorf("non-200 status code -> (%d) %s", resp.StatusCode, errMsg)
 	}
-
-	return resp, nil
 }
 
 // RequestAndDecode: Convenience wrapper to also decode response to given interface.
