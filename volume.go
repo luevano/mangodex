@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 )
@@ -42,12 +41,13 @@ type VolumeChapter struct {
 // https://api.mangadex.org/docs/redoc.html#tag/Manga/operation/get-manga-aggregate
 //
 // TODO: integrate manga/id/aggregate to manga.go?
-func (s *VolumeService) List(id string, params url.Values) (map[string]*Volume, error) {
+func (s *VolumeService) List(id string, params url.Values) (volumeList map[string]*Volume, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(MangaAggregatePath, id)
 	u.RawQuery = params.Encode()
 
-	res, err := s.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	var res VolumeResponse
+	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}
@@ -55,19 +55,18 @@ func (s *VolumeService) List(id string, params url.Values) (map[string]*Volume, 
 	// First, need to check what type is "volumes"
 	// []interface = no volumes found, JSON is just an array
 	// map[string]interface = volumes found, JSON is a map/dict
-	var volumesType interface{}
+	var volumesType any
 	err = json.Unmarshal(res.Volumes, &volumesType)
 	if err != nil {
 		return nil, err
 	}
 
-	// Handle no volumes found vs volumes found
 	switch volumesType.(type) {
 	case []interface{}:
+		// No volumes found case
 		// Not sure how to handle the return, this is best so far
 		return nil, nil
 	case map[string]interface{}:
-		var volumeList map[string]*Volume
 		err = json.Unmarshal(res.Volumes, &volumeList)
 		if err != nil {
 			return nil, err
@@ -76,24 +75,4 @@ func (s *VolumeService) List(id string, params url.Values) (map[string]*Volume, 
 	default:
 		return nil, fmt.Errorf("unexpected volumes response type")
 	}
-}
-
-// RequestAndDecode: Convenience wrapper to also decode response to VolumeResponse.
-// Not to be confused with DexClient.RequestAndDecode, which is for generic DexResponse types.
-func (s *VolumeService) RequestAndDecode(ctx context.Context, method, url string, body io.Reader) (*VolumeResponse, error) {
-	// Get the response of the request.
-	resp, err := s.client.Request(ctx, method, url, body)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Decode the request into VolumeResponse.
-	var res VolumeResponse
-	err = json.NewDecoder(resp.Body).Decode(&res)
-	if err != nil {
-		return nil, err
-	}
-
-	return &res, nil
 }

@@ -42,31 +42,26 @@ type AtHomeServer struct {
 	Chapter ChapterData
 }
 
-// Get: Get MangaDex@Home server for a chapter.
+// Get: Get MangaDex@Home server for a chapter by id.
 //
 // https://api.mangadex.org/docs/redoc.html#tag/AtHome/operation/get-at-home-server-chapterId
-func (s *AtHomeService) Get(id string, params url.Values) (*AtHomeServer, error) {
+func (s *AtHomeService) Get(id string, params url.Values) (atHome *AtHomeServer, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(GetMDHomeURLPath, id)
 	u.RawQuery = params.Encode()
 
-	resp, err := s.client.Request(context.Background(), http.MethodGet, u.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var res AtHomeServerResponse
-	err = json.NewDecoder(resp.Body).Decode(&res)
+	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	return &AtHomeServer{
+	atHome = &AtHomeServer{
 		client:  &http.Client{},
 		BaseURL: res.BaseURL,
 		Chapter: res.Chapter,
-	}, nil
+	}
+	return atHome, nil
 }
 
 // GetChapterPage: Return page data for a chapter with the filename of that page.

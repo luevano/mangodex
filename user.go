@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 )
@@ -43,21 +42,21 @@ type UserAttributes struct {
 // Get: Get user by id.
 //
 // https://api.mangadex.org/docs/redoc.html#tag/User/operation/get-user-id
-func (s *UserService) Get(id string) (*User, error) {
+func (s *UserService) Get(id string) (user *User, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(GetUserPath, id)
 
-	res, err := s.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	var res UserResponse
+	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}
-	var user User
 	err = json.Unmarshal(res.Data, &user)
 	if err != nil {
 		return nil, err
 	}
 
-	return &user, err
+	return user, err
 }
 
 // TODO: enable once Auth service is fixed.
@@ -103,23 +102,3 @@ func (s *UserService) GetLoggedUser() (*User, error) {
 	return &user, err
 }
 */
-
-// RequestAndDecode: Convenience wrapper to also decode response to UserResponse.
-// Not to be confused with DexClient.RequestAndDecode, which is for generic DexResponse types.
-func (s *UserService) RequestAndDecode(ctx context.Context, method, url string, body io.Reader) (*UserResponse, error) {
-	// Get the response of the request.
-	resp, err := s.client.Request(ctx, method, url, body)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Decode the request into UserResponse.
-	var res UserResponse
-	err = json.NewDecoder(resp.Body).Decode(&res)
-	if err != nil {
-		return nil, err
-	}
-
-	return &res, nil
-}

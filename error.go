@@ -11,10 +11,6 @@ type ErrorResponse struct {
 	Errors []Error `json:"errors"`
 }
 
-func (er *ErrorResponse) GetResult() string {
-	return er.Result
-}
-
 // GetErrors: Get the errors for this particular request.
 func (er *ErrorResponse) GetErrors() string {
 	var errors strings.Builder

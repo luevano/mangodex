@@ -33,23 +33,23 @@ type CoverAttributes struct {
 	Locale      string  `json:"locale"`
 }
 
-// List : Get manga cover list.
+// List: Get manga cover list.
 //
 // https://api.mangadex.org/docs/redoc.html#tag/Cover/operation/get-cover
-func (s *CoverService) List(params url.Values) ([]*Cover, error) {
+func (s *CoverService) List(params url.Values) (coverList []*Cover, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = CoverListPath
 	u.RawQuery = params.Encode()
 
-	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	var res DexResponse
+	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}
-	var coverArtList []*Cover
-	err = json.Unmarshal(res.Data, &coverArtList)
+	err = json.Unmarshal(res.Data, &coverList)
 	if err != nil {
 		return nil, err
 	}
 
-	return coverArtList, nil
+	return coverList, nil
 }

@@ -73,14 +73,14 @@ func NewDexClient() *DexClient {
 }
 
 // Request: Sends a request to the MangaDex API.
-func (dex *DexClient) Request(ctx context.Context, method, url string, body io.Reader) (*http.Response, error) {
+func (c *DexClient) Request(ctx context.Context, method, url string, body io.Reader) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return nil, err
 	}
-	req.Header = dex.header
+	req.Header = c.header
 
-	resp, err := dex.client.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -103,19 +103,18 @@ func (dex *DexClient) Request(ctx context.Context, method, url string, body io.R
 	return resp, nil
 }
 
-// RequestAndDecode: Convenience wrapper to also decode response to DexResponse type.
-func (dex *DexClient) RequestAndDecode(ctx context.Context, method, url string, body io.Reader) (*DexResponse, error) {
-	resp, err := dex.Request(ctx, method, url, body)
+// RequestAndDecode: Convenience wrapper to also decode response to given interface.
+func (c *DexClient) RequestAndDecode(ctx context.Context, method, url string, body io.Reader, res any) error {
+	resp, err := c.Request(ctx, method, url, body)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer resp.Body.Close()
 
-	var res DexResponse
 	err = json.NewDecoder(resp.Body).Decode(&res)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &res, nil
+	return nil
 }

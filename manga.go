@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 )
@@ -71,37 +70,37 @@ type MangaAttributes struct {
 // Get: Get a manga by manga id.
 //
 // https://api.mangadex.org/docs/redoc.html#tag/Manga/operation/get-manga-id
-func (s *MangaService) Get(id string, params url.Values) (*Manga, error) {
+func (s *MangaService) Get(id string, params url.Values) (manga *Manga, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(MangaPath, id)
 	u.RawQuery = params.Encode()
 
-	res, err := s.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	var res MangaResponse
+	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}
-	var manga Manga
 	err = json.Unmarshal(res.Data, &manga)
 	if err != nil {
 		return nil, err
 	}
 
-	return &manga, nil
+	return manga, nil
 }
 
 // List: Get manga list.
 //
 // https://api.mangadex.org/docs/redoc.html#tag/Manga/operation/get-search-manga
-func (s *MangaService) List(params url.Values) ([]*Manga, error) {
+func (s *MangaService) List(params url.Values) (mangaList []*Manga, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = MangaListPath
 	u.RawQuery = params.Encode()
 
-	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	var res DexResponse
+	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}
-	var mangaList []*Manga
 	err = json.Unmarshal(res.Data, &mangaList)
 	if err != nil {
 		return nil, err
@@ -155,23 +154,3 @@ func (s *MangaService) ToggleMangaFollowStatusContext(ctx context.Context, id st
 	return &r, err
 }
 */
-
-// RequestAndDecode: Convenience wrapper to also decode response to MangaResponse.
-// Not to be confused with DexClient.RequestAndDecode, which is for generic DexResponse types.
-func (s *MangaService) RequestAndDecode(ctx context.Context, method, url string, body io.Reader) (*MangaResponse, error) {
-	// Get the response of the request.
-	resp, err := s.client.Request(ctx, method, url, body)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Decode the request into MangaResponse.
-	var res MangaResponse
-	err = json.NewDecoder(resp.Body).Decode(&res)
-	if err != nil {
-		return nil, err
-	}
-
-	return &res, nil
-}

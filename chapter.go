@@ -62,7 +62,8 @@ func (s *ChapterService) Get(id string, params url.Values) (chapter *Chapter, er
 	u.Path = fmt.Sprintf(ChapterPath, id)
 	u.RawQuery = params.Encode()
 
-	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	var res DexResponse
+	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +83,8 @@ func (s *ChapterService) List(params url.Values) (chapterList []*Chapter, err er
 	u.Path = ChapterListPath
 	u.RawQuery = params.Encode()
 
-	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	var res DexResponse
+	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +106,8 @@ func (s *ChapterService) GetMangaChapters(id string, params url.Values) (chapter
 	u.Path = fmt.Sprintf(MangaChaptersPath, id)
 	u.RawQuery = params.Encode()
 
-	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	var res DexResponse
+	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}

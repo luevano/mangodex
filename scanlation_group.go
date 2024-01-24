@@ -47,41 +47,41 @@ type ScanlationGroupAttributes struct {
 // Get: Get scanlation group by scanlation group id.
 //
 // https://api.mangadex.org/docs/redoc.html#tag/ScanlationGroup/operation/get-group-id
-func (s ScanlationGroupService) Get(id string, params url.Values) (*ScanlationGroup, error) {
+func (s ScanlationGroupService) Get(id string, params url.Values) (group *ScanlationGroup, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(GroupGet, id)
 	u.RawQuery = params.Encode()
 
-	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	var res DexResponse
+	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}
-	var scanGroup ScanlationGroup
-	err = json.Unmarshal(res.Data, &scanGroup)
+	err = json.Unmarshal(res.Data, &group)
 	if err != nil {
 		return nil, err
 	}
 
-	return &scanGroup, nil
+	return group, nil
 }
 
 // List: Get scanlation group list.
 //
 // https://api.mangadex.org/docs/redoc.html#tag/ScanlationGroup/operation/get-search-group
-func (s ScanlationGroupService) List(params url.Values) ([]*ScanlationGroup, error) {
+func (s ScanlationGroupService) List(params url.Values) (groupList []*ScanlationGroup, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(GroupList)
 	u.RawQuery = params.Encode()
 
-	res, err := s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil)
+	var res DexResponse
+	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}
-	var scanGroups []*ScanlationGroup
-	err = json.Unmarshal(res.Data, &scanGroups)
+	err = json.Unmarshal(res.Data, &groupList)
 	if err != nil {
 		return nil, err
 	}
 
-	return scanGroups, nil
+	return groupList, nil
 }
