@@ -88,9 +88,14 @@ func (c *DexClient) Request(ctx context.Context, method, url string, body io.Rea
 	switch resp.StatusCode {
 	case 200:
 		return resp, nil
+	case 403:
+		return nil, fmt.Errorf("403 Forbidden: Probably temporarily IP banned")
+	case 429:
+		retryAfter := resp.Header.Get("Retry-After")
+		return nil, fmt.Errorf("429 Too Many Requests: Retry-After: %s", retryAfter)
 	case 503:
 		// Special case for maintenance responses.
-		return nil, fmt.Errorf("MangaDex is temporarily down for maintenance.")
+		return nil, fmt.Errorf("503 Service Unavailable: MangaDex is temporarily down for maintenance")
 	default:
 		defer resp.Body.Close()
 		var er ErrorResponse
@@ -98,12 +103,12 @@ func (c *DexClient) Request(ctx context.Context, method, url string, body io.Rea
 		err = json.NewDecoder(resp.Body).Decode(&er)
 		// Sometimes the error page is just plain HTML, so it can't be decoded into ErrorResponse
 		if err != nil {
-			errMsg = fmt.Sprintf("failed to decode into ErrorResponse (HTML response?), error: %s", err.Error())
+			errMsg = fmt.Sprintf("Failed to decode into ErrorResponse (HTML response?): %s", err.Error())
 		} else {
 			errMsg = er.GetErrors()
 		}
 
-		return nil, fmt.Errorf("non-200 status code -> (%d) %s", resp.StatusCode, errMsg)
+		return nil, fmt.Errorf("Non-200 status code -> (%d): %s", resp.StatusCode, errMsg)
 	}
 }
 

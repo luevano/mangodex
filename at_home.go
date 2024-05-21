@@ -36,7 +36,7 @@ type ChapterData struct {
 
 // AtHomeServer: Client for interfacing with MangaDex@Home.
 type AtHomeServer struct {
-	client *http.Client
+	client *DexClient
 
 	BaseURL string
 	Chapter ChapterData
@@ -57,7 +57,7 @@ func (s *AtHomeService) Get(id string, params url.Values) (atHome *AtHomeServer,
 	}
 
 	atHome = &AtHomeServer{
-		client:  &http.Client{},
+		client:  s.client,
 		BaseURL: res.BaseURL,
 		Chapter: res.Chapter,
 	}
@@ -65,45 +65,46 @@ func (s *AtHomeService) Get(id string, params url.Values) (atHome *AtHomeServer,
 }
 
 // GetChapterPage: Return page data for a chapter with the filename of that page.
-func (s *AtHomeServer) GetChapterPage(quality, filename string) ([]byte, error) {
-	path := strings.Join([]string{s.BaseURL, quality, s.Chapter.Hash, filename}, "/")
+func (s *AtHomeServer) GetChapterPage(quality, filename string, report bool) ([]byte, error) {
+	var finalErr error
+	url := strings.Join([]string{s.BaseURL, quality, s.Chapter.Hash, filename}, "/")
 	ctx := context.Background()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, path, nil)
-	if err != nil {
-		return nil, err
-	}
 
 	// Start timing how long to get all bytes for the file.
 	start := time.Now()
-	resp, err := s.client.Do(req)
-	// If we cannot not get chapter page successfully.
-	if err != nil || resp.StatusCode != 200 {
-		if err == nil {
-			err = fmt.Errorf("%d status code: failed to get chapter page data", resp.StatusCode)
-		}
+	resp, err := s.client.Request(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		finalErr = fmt.Errorf("Failed to get chapter page data: %s", err.Error())
 	}
 	defer resp.Body.Close()
 
-	var fileData []byte
-	fileData, err = io.ReadAll(resp.Body)
+	// Even on failed requests, get all the bytes from the body
+	image, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		finalErr = fmt.Errorf("Failed to read all bytes from body: %s", finalErr.Error())
 	}
 
 	// Send report in the background.
-	go func() {
-		r := &reportPayload{
-			URL:      path,
-			Success:  err == nil,
-			Bytes:    len(fileData),
-			Duration: time.Since(start).Milliseconds(),
-			Cached:   strings.HasPrefix(resp.Header.Get("X-Cache"), "HIT"),
-		}
-		_, _ = s.reportContext(ctx, r)
-	}()
+	if report {
+		go func() {
+			r := &reportPayload{
+				URL:      url,
+				Success:  finalErr == nil,
+				Bytes:    len(image),
+				Duration: time.Since(start).Milliseconds(),
+				Cached:   strings.HasPrefix(resp.Header.Get("X-Cache"), "HIT"),
+			}
+			rBytes, err := json.Marshal(r)
+			if err == nil {
+				s.client.Request(ctx, http.MethodPost, MDHomeReportURL, bytes.NewBuffer(rBytes))
+			}
+		}()
+	}
 
-	return fileData, nil
+	if finalErr != nil {
+		return nil, finalErr
+	}
+	return image, nil
 }
 
 // reportPayload: Required fields for reporting page download result.
@@ -113,17 +114,4 @@ type reportPayload struct {
 	Bytes    int
 	Duration int64
 	Cached   bool
-}
-
-// reportContext: Report success of getting chapter page data.
-func (s *AtHomeServer) reportContext(ctx context.Context, r *reportPayload) (*http.Response, error) {
-	rBytes, err := json.Marshal(r)
-	if err != nil {
-		return nil, err
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, MDHomeReportURL, bytes.NewBuffer(rBytes))
-	if err != nil {
-		return nil, err
-	}
-	return s.client.Do(req)
 }
