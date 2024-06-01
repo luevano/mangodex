@@ -34,7 +34,7 @@ func TestGetLoggedUser(t *testing.T) {
 
 func TestMangaGet(t *testing.T) {
 	manga, err := client.Manga.Get("acc3ff9c-3494-4bdc-b474-96b24d0c160c", url.Values{})
-	if err != nil && manga.Attributes.Title.GetLocalString("en") == "Ochite Oborete" {
+	if err != nil && manga.Attributes.Title.GetLocalString("en", false) == "Ochite Oborete" {
 		t.Errorf("Getting Manga from Group failed: %s\n", err.Error())
 	}
 }

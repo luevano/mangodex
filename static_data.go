@@ -101,6 +101,24 @@ const (
 	MangaRelationAlternateVersion MangaRelation = "alternate_version"
 )
 
+type MangaState string
+
+const (
+	MangaStateDraft     MangaState = "draft"
+	MangaStateSubmitted MangaState = "submitted"
+	MangaStatePublished MangaState = "published"
+	MangaStateRejected  MangaState = "rejected"
+)
+
+type TagGroup string
+
+const (
+	TagGroupContent TagGroup = "content"
+	TagGroupFormat  TagGroup = "format"
+	TagGroupGenre   TagGroup = "genre"
+	TagGroupTheme   TagGroup = "theme"
+)
+
 type OrderEnum string
 
 const (

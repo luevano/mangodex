@@ -14,11 +14,14 @@ type Tag struct {
 type TagAttributes struct {
 	Name        LocalisedStrings `json:"name"`
 	Description LocalisedStrings `json:"description"`
-	Group       string           `json:"group"`
+	Group       TagGroup         `json:"group"`
 	Version     int              `json:"version"`
 }
 
 // GetName: Get name of the tag.
-func (t *Tag) GetName(langCode string) string {
-	return t.Attributes.Name.GetLocalString(langCode)
+//
+// If the requested language code tag name is not found and fallback is true,
+// the first available value is returned, else an empty string.
+func (t *Tag) GetName(langCode string, fallback bool) string {
+	return t.Attributes.Name.GetLocalString(langCode, fallback)
 }

@@ -11,6 +11,7 @@ import (
 type Relationship struct {
 	ID         uuid.UUID        `json:"id"`
 	Type       RelationshipType `json:"type"`
+	Related    *MangaRelation   `json:"related"`
 	Attributes interface{}      `json:"attributes"`
 }
 
@@ -19,6 +20,7 @@ func (a *Relationship) UnmarshalJSON(data []byte) error {
 	typ := struct {
 		ID         uuid.UUID        `json:"id"`
 		Type       RelationshipType `json:"type"`
+		Related    *MangaRelation   `json:"related"`
 		Attributes json.RawMessage  `json:"attributes"`
 	}{}
 	if err := json.Unmarshal(data, &typ); err != nil {
@@ -30,6 +32,8 @@ func (a *Relationship) UnmarshalJSON(data []byte) error {
 	case RelationshipTypeManga:
 		a.Attributes = &MangaAttributes{}
 	case RelationshipTypeAuthor:
+		a.Attributes = &AuthorAttributes{}
+	case RelationshipTypeArtist:
 		a.Attributes = &AuthorAttributes{}
 	case RelationshipTypeScanlationGroup:
 		a.Attributes = &ScanlationGroupAttributes{}
@@ -43,6 +47,7 @@ func (a *Relationship) UnmarshalJSON(data []byte) error {
 
 	a.ID = typ.ID
 	a.Type = typ.Type
+	a.Related = typ.Related
 	if typ.Attributes != nil {
 		if err = json.Unmarshal(typ.Attributes, a.Attributes); err != nil {
 			return fmt.Errorf("error unmarshalling relationship of type %s: %s, %s",

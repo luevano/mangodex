@@ -35,17 +35,19 @@ func (l *LocalisedStrings) UnmarshalJSON(data []byte) error {
 
 // GetLocalString: Get the localised string for a particular language code.
 //
-// If the required string is not found, it will return the first entry, or an empty string otherwise.
-func (l *LocalisedStrings) GetLocalString(langCode string) string {
-	// If we cannot find the required code, then return first value.
-	if s, ok := l.Values[langCode]; !ok {
-		var v string
-		for _, value := range l.Values {
-			v = value
-			break
-		}
-		return v
-	} else {
+// If the required string is not found and fallback is true, it will return the first entry,
+// or an empty string otherwise.
+func (l *LocalisedStrings) GetLocalString(langCode string, fallback bool) string {
+	s, found := l.Values[langCode]
+	if found {
 		return s
 	}
+
+	if fallback {
+		for _, v := range l.Values {
+			return v
+		}
+	}
+
+	return ""
 }

@@ -34,16 +34,22 @@ type Manga struct {
 }
 
 // GetTitle: Get title of the manga.
-func (m *Manga) GetTitle(langCode string) string {
-	if title := m.Attributes.Title.GetLocalString(langCode); title != "" {
+//
+// If the requested language code title is not found and fallback is true,
+// the first available value is returned, else an empty string.
+func (m *Manga) GetTitle(langCode string, fallback bool) string {
+	if title := m.Attributes.Title.GetLocalString(langCode, fallback); title != "" {
 		return title
 	}
-	return m.Attributes.AltTitles.GetLocalString(langCode)
+	return m.Attributes.AltTitles.GetLocalString(langCode, fallback)
 }
 
 // GetDescription: Get description of the manga.
-func (m *Manga) GetDescription(langCode string) string {
-	return m.Attributes.Description.GetLocalString(langCode)
+//
+// If the requested language code description is not found and fallback is true,
+// the first available value is returned, else an empty string.
+func (m *Manga) GetDescription(langCode string, fallback bool) string {
+	return m.Attributes.Description.GetLocalString(langCode, fallback)
 }
 
 // MangaAttributes: Attributes for a manga.
@@ -61,7 +67,7 @@ type MangaAttributes struct {
 	Year                   *int               `json:"year"`
 	ContentRating          *ContentRating     `json:"contentRating"`
 	Tags                   []*Tag             `json:"tags"`
-	State                  string             `json:"state"`
+	State                  MangaState         `json:"state"`
 	Version                int                `json:"version"`
 	CreatedAt              string             `json:"createdAt"`
 	UpdatedAt              string             `json:"updatedAt"`
