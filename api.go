@@ -48,10 +48,15 @@ type service struct {
 }
 
 // NewDexClient: New MangaDex client.
-func NewDexClient() *DexClient {
+func NewDexClient(options Options) *DexClient {
+	if err := options.validate(); err != nil {
+		panic(fmt.Errorf("Invalid MangoDex client options: %s", err.Error()))
+	}
+
 	client := http.Client{}
 	header := http.Header{}
 	header.Set("Content-Type", "application/json")
+	header.Set("User-Agent", options.UserAgent)
 
 	dex := &DexClient{
 		client: &client,

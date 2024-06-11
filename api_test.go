@@ -8,7 +8,7 @@ import (
 
 // TODO: refactor all the tests
 
-var client = NewDexClient()
+var client = NewDexClient(DefaultOptions())
 
 /*
 func TestLogin(t *testing.T) {
