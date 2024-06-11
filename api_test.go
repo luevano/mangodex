@@ -10,24 +10,6 @@ import (
 
 var client = NewDexClient(DefaultOptions())
 
-/*
-func TestLogin(t *testing.T) {
-	err := client.Auth.Login(os.Getenv("USERNAME"), os.Getenv("PASSWORD"))
-	if err != nil {
-		t.Error("Login failed.")
-	}
-	fmt.Printf("%v\n", client)
-}
-
-func TestGetLoggedUser(t *testing.T) {
-	user, err := client.User.GetLoggedUser()
-	if err != nil {
-		t.Error("Getting user failed.")
-	}
-	t.Log(user)
-}
-*/
-
 //
 // manga.go
 //
