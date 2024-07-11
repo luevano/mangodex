@@ -14,8 +14,31 @@ const (
 
 // VolumeResponse: Volume response type, this differs from the common DexResponse type.
 type VolumeResponse struct {
-	Result  string          `json:"result"`
-	Volumes json.RawMessage `json:"volumes"`
+	Result  string     `json:"result"`
+	Volumes VolumeList `json:"volumes"`
+}
+
+type VolumeList map[string]*Volume
+
+func (v *VolumeList) UnmarshalJSON(data []byte) error {
+	// Try to unmarshal directly into the type
+	var volumes map[string]*Volume
+	if err := json.Unmarshal(data, &volumes); err == nil {
+		*v = volumes
+		return nil
+	}
+
+	// Then try to unmarshal into a list of volumes (no volumes found)
+	var noVolumes []any
+	if err := json.Unmarshal(data, &noVolumes); err == nil {
+		if len(noVolumes) != 0 {
+			return fmt.Errorf("unexpected volume list; expected 0 volumes, got %d", len(noVolumes))
+		}
+		*v = map[string]*Volume{}
+		return nil
+	}
+
+	return fmt.Errorf("unexpected volume list type: %s", string(data))
 }
 
 // VolumeService : Provides volume services provided by the API (manga/id/aggregate).
@@ -23,9 +46,32 @@ type VolumeService service
 
 // Volume: Struct containing information on a volume.
 type Volume struct {
-	Volume   string                   `json:"volume"`
-	Count    int                      `json:"count"`
-	Chapters map[string]VolumeChapter `json:"chapters"`
+	Volume   string            `json:"volume"`
+	Count    int               `json:"count"`
+	Chapters VolumeChapterList `json:"chapters"`
+}
+
+type VolumeChapterList map[string]VolumeChapter
+
+func (v *VolumeChapterList) UnmarshalJSON(data []byte) error {
+	// Try to unmarshal directly into the type
+	var chapters map[string]VolumeChapter
+	if err := json.Unmarshal(data, &chapters); err == nil {
+		*v = chapters
+		return nil
+	}
+
+	// Then try to unmarshal into a list of chapters (only one chapter is found)
+	var oneChapter []VolumeChapter
+	if err := json.Unmarshal(data, &oneChapter); err == nil {
+		if len(oneChapter) != 1 {
+			return fmt.Errorf("unexpected volume chapter list; expected 1 chapter, got %d", len(oneChapter))
+		}
+		*v = map[string]VolumeChapter{oneChapter[0].Chapter: oneChapter[0]}
+		return nil
+	}
+
+	return fmt.Errorf("unexpected volume chapter list type: %s", string(data))
 }
 
 // VolumeChapter: Chapter data specific to the volumes list. This is different to the actual Chapter data.
@@ -52,27 +98,5 @@ func (s *VolumeService) List(id string, params url.Values) (volumeList map[strin
 		return nil, err
 	}
 
-	// First, need to check what type is "volumes"
-	// []interface = no volumes found, JSON is just an array
-	// map[string]interface = volumes found, JSON is a map/dict
-	var volumesType any
-	err = json.Unmarshal(res.Volumes, &volumesType)
-	if err != nil {
-		return nil, err
-	}
-
-	switch volumesType.(type) {
-	case []interface{}:
-		// No volumes found case
-		// Not sure how to handle the return, this is best so far
-		return nil, nil
-	case map[string]interface{}:
-		err = json.Unmarshal(res.Volumes, &volumeList)
-		if err != nil {
-			return nil, err
-		}
-		return volumeList, nil
-	default:
-		return nil, fmt.Errorf("unexpected volumes response type")
-	}
+	return res.Volumes, nil
 }

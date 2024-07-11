@@ -15,9 +15,23 @@ var client = NewDexClient(DefaultOptions())
 //
 
 func TestMangaGet(t *testing.T) {
-	manga, err := client.Manga.Get("acc3ff9c-3494-4bdc-b474-96b24d0c160c", url.Values{})
-	if err != nil && manga.Attributes.Title.GetLocalString("en", false) == "Ochite Oborete" {
-		t.Errorf("Getting Manga from Group failed: %s\n", err.Error())
+	tests := []struct {
+		id          string
+		englishName string
+	}{
+		{"acc3ff9c-3494-4bdc-b474-96b24d0c160c", "Ochite Oborete"},
+		{"75ee72ab-c6bf-4b87-badd-de839156934c", "Death Note"},
+		{"a1c7c817-4e59-43b7-9365-09675a149a6f", "One Piece"},
+		{"eeb2ab0e-7dbc-4f0c-b476-8181d44217a8", "Tengoku Daimakyou"},
+	}
+	for _, tt := range tests {
+		manga, err := client.Manga.Get(tt.id, url.Values{})
+		if err != nil {
+			t.Errorf("Getting manga by id %q failed: %s\n", tt.id, err.Error())
+		}
+		if name := manga.Attributes.Title.GetLocalString("en", false); name != tt.englishName {
+			t.Errorf("Manga name for %q doesn't match expected; wanted %q, gt %q", tt.id, tt.englishName, name)
+		}
 	}
 }
 
@@ -30,7 +44,7 @@ func TestMangaList(t *testing.T) {
 	// If it is a search, then we add the search term.
 	_, err := client.Manga.List(params)
 	if err != nil {
-		t.Errorf("Getting manga failed: %s\n", err.Error())
+		t.Errorf("Getting manga list failed: %s\n", err.Error())
 	}
 }
 
@@ -84,11 +98,10 @@ func TestCover(t *testing.T) {
 	params := url.Values{}
 	params.Add("manga[]", "eadc095d-e672-4136-98d0-41a98161ad0e")
 
-	resp, err := client.Cover.List(params)
+	_, err := client.Cover.List(params)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
-	t.Log(resp)
 }
 
 //
@@ -96,15 +109,23 @@ func TestCover(t *testing.T) {
 //
 
 func TestVolume(t *testing.T) {
-	// One Piece uuid
-	id := "a1c7c817-4e59-43b7-9365-09675a149a6f"
-	params := url.Values{}
-	params.Add("translatedLanguage[]", "en")
-	resp, err := client.Volume.List(id, params)
-	if err != nil {
-		t.Fatal(err)
+	tests := []struct {
+		id    string
+		manga string
+	}{
+		{"a1c7c817-4e59-43b7-9365-09675a149a6f", "One Piece"},    // normal (undownloadable chapters though)
+		{"75ee72ab-c6bf-4b87-badd-de839156934c", "Death Note"},   // one of the volumes contains only 1 chap
+		{"0acb51ef-3d71-4993-81a0-8cbcfb88fa9e", "Demon Slayer"}, // no volumes
+		{"ddfc910b-9923-4048-a260-e5606f9e112d", "AD Police"},    // only one volume (and numbered)
 	}
-	t.Log(resp)
+	for _, tt := range tests {
+		params := url.Values{}
+		params.Add("translatedLanguage[]", "en")
+		_, err := client.Volume.List(tt.id, params)
+		if err != nil {
+			t.Errorf("Failed to get the volume list for %q (%s): %s", tt.id, tt.manga, err.Error())
+		}
+	}
 }
 
 // TODO: change to a more reliable test, this can change at any time whenever some volumes/chapters are added
@@ -116,13 +137,12 @@ func TestVolumeEmpty(t *testing.T) {
 	params.Add("translatedLanguage[]", "en")
 	resp, err := client.Volume.List(id, params)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	// Expected an empty map
 	if len(resp) != 0 {
-		t.Fatal(resp)
+		t.Error(resp)
 	}
-	t.Log(resp)
 }
 
 //
@@ -132,9 +152,8 @@ func TestVolumeEmpty(t *testing.T) {
 func TestUser(t *testing.T) {
 	// Newtonius uuid
 	id := "904b5ab6-7e00-4b7e-a6c6-3dda7860b69e"
-	resp, err := client.User.Get(id)
+	_, err := client.User.Get(id)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
-	t.Log(resp)
 }
