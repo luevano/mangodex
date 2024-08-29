@@ -75,6 +75,9 @@ func (s *AtHomeServer) GetChapterPage(quality, filename string, report bool) ([]
 	resp, err := s.client.Request(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		finalErr = fmt.Errorf("Failed to get chapter page data: %s", err.Error())
+		if resp == nil || resp.Body == nil {
+			return nil, finalErr
+		}
 	}
 	defer resp.Body.Close()
 

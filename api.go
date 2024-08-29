@@ -125,10 +125,5 @@ func (c *DexClient) RequestAndDecode(ctx context.Context, method, url string, bo
 	}
 	defer resp.Body.Close()
 
-	err = json.NewDecoder(resp.Body).Decode(&res)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return json.NewDecoder(resp.Body).Decode(&res)
 }
