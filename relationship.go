@@ -48,7 +48,8 @@ func (a *Relationship) UnmarshalJSON(data []byte) error {
 	a.ID = typ.ID
 	a.Type = typ.Type
 	a.Related = typ.Related
-	if typ.Attributes != nil {
+	// the API sometimes sends an empty list instead of an object
+	if typ.Attributes != nil && string(typ.Attributes) != "[]" {
 		if err = json.Unmarshal(typ.Attributes, a.Attributes); err != nil {
 			return fmt.Errorf("error unmarshalling relationship of type %s: %s, %s",
 				typ.Type, err.Error(), string(data))

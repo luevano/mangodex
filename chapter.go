@@ -47,6 +47,8 @@ type ChapterAttributes struct {
 	TranslatedLanguage string  `json:"translatedLanguage"`
 	Uploader           string  `json:"uploader"`
 	ExternalURL        *string `json:"externalUrl"`
+	IsUnavailable      bool    `json:"isUnavailable"`
+	Pages              int     `json:"pages"`
 	Version            int     `json:"version"`
 	CreatedAt          string  `json:"createdAt"`
 	UpdatedAt          string  `json:"updatedAt"`

@@ -1,4 +1,4 @@
-// Package mangodex provides an API wrapper for MangaDex v5.10.0 API.
+// Package mangodex provides an API wrapper for MangaDex v5.13.1 API.
 package mangodex
 
 import (
@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 const (
@@ -94,10 +96,9 @@ func (c *DexClient) Request(ctx context.Context, method, url string, body io.Rea
 	case 200:
 		return resp, nil
 	case 403:
-		return nil, fmt.Errorf("403 Forbidden: Probably temporarily IP banned")
+		return nil, fmt.Errorf("403 Forbidden: expired MangaDex@Home url, or temporarily IP banned")
 	case 429:
-		retryAfter := resp.Header.Get("Retry-After")
-		return nil, fmt.Errorf("429 Too Many Requests: Retry-After: %s", retryAfter)
+		return nil, fmt.Errorf("429 Too Many Requests: Retry-After: %d", retryAfterSecs(resp.Header))
 	case 503:
 		// Special case for maintenance responses.
 		return nil, fmt.Errorf("503 Service Unavailable: MangaDex is temporarily down for maintenance")
@@ -126,4 +127,17 @@ func (c *DexClient) RequestAndDecode(ctx context.Context, method, url string, bo
 	defer resp.Body.Close()
 
 	return json.NewDecoder(resp.Body).Decode(&res)
+}
+
+// retryAfterSecs: Seconds to wait after a 429, the endpoint-specific limits only send
+// X-RateLimit-Retry-After (a unix timestamp of when the limit resets).
+func retryAfterSecs(header http.Header) int {
+	if secs, err := strconv.Atoi(header.Get("Retry-After")); err == nil {
+		return secs
+	}
+	if reset, err := strconv.ParseInt(header.Get("X-RateLimit-Retry-After"), 10, 64); err == nil {
+		return max(1, int(reset-time.Now().Unix()))
+	}
+	// no hint, MangaDex's general limit is ~5 requests per second
+	return 1
 }

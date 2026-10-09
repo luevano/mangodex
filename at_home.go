@@ -123,9 +123,9 @@ func (s *AtHomeServer) GetChapterPageContext(ctx context.Context, quality, filen
 
 // reportPayload: Required fields for reporting page download result.
 type reportPayload struct {
-	URL      string
-	Success  bool
-	Bytes    int
-	Duration int64
-	Cached   bool
+	URL      string `json:"url"`
+	Success  bool   `json:"success"`
+	Bytes    int    `json:"bytes"`
+	Duration int64  `json:"duration"`
+	Cached   bool   `json:"cached"`
 }

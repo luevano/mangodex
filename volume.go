@@ -76,10 +76,11 @@ func (v *VolumeChapterList) UnmarshalJSON(data []byte) error {
 
 // VolumeChapter: Chapter data specific to the volumes list. This is different to the actual Chapter data.
 type VolumeChapter struct {
-	Chapter string   `json:"chapter"`
-	ID      string   `json:"id"`
-	Others  []string `json:"others"`
-	Count   int      `json:"count"`
+	Chapter       string   `json:"chapter"`
+	ID            string   `json:"id"`
+	Others        []string `json:"others"`
+	Count         int      `json:"count"`
+	IsUnavailable bool     `json:"isUnavailable"`
 }
 
 // List: Get a list of manga volumes.

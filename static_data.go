@@ -1,6 +1,6 @@
 package mangodex
 
-const APIVersion = "5.10.0"
+const APIVersion = "5.13.1"
 
 // Publication demographic
 
@@ -62,6 +62,16 @@ const (
 	RelationshipTypeTag             RelationshipType = "tag"
 	RelationshipTypeUser            RelationshipType = "user"
 	RelationshipTypeCustomList      RelationshipType = "custom_list"
+	RelationshipTypeCreator         RelationshipType = "creator"
+	RelationshipTypeLeader          RelationshipType = "leader"
+	RelationshipTypeMember          RelationshipType = "member"
+	RelationshipTypeAPIClient       RelationshipType = "api_client"
+	RelationshipTypeMangaRelation   RelationshipType = "manga_relation"
+	RelationshipTypeRecommendation  RelationshipType = "manga_recommendation"
+	RelationshipTypeReport          RelationshipType = "report"
+	RelationshipTypeMappingID       RelationshipType = "mapping_id"
+	RelationshipTypeUploadSession   RelationshipType = "upload_session"
+	RelationshipTypeUploadFile      RelationshipType = "upload_session_file"
 )
 
 type MangaRelation string
