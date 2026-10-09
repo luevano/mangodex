@@ -44,3 +44,34 @@ func TestRelationshipEmptyAttributes(t *testing.T) {
 		t.Errorf("empty attributes list should be ignored, got %s", err)
 	}
 }
+
+func TestLocalisedStringsAltTitles(t *testing.T) {
+	var l LocalisedStrings
+	data := `[{"en":"Solo Leveling"},{"ko":"나 혼자만 레벨업"},{"en":"Only I Level up"}]`
+	if err := json.Unmarshal([]byte(data), &l); err != nil {
+		t.Fatal(err)
+	}
+	if got := l.GetLocalString("en", false); got != "Solo Leveling" {
+		t.Errorf("wanted the first english title, got %q", got)
+	}
+	if got := l.GetAll("en"); len(got) != 2 || got[1] != "Only I Level up" {
+		t.Errorf("wanted both english titles in order, got %q", got)
+	}
+	if got := l.GetLocalString("fr", true); got != "Solo Leveling" {
+		t.Errorf("fallback should be the first value, got %q", got)
+	}
+}
+
+func TestLocalisedStringsObject(t *testing.T) {
+	var l LocalisedStrings
+	if err := json.Unmarshal([]byte(`{"ja-ro":"Sousou no Frieren","en":"Frieren"}`), &l); err != nil {
+		t.Fatal(err)
+	}
+	if got := l.GetLocalString("ja-ro", false); got != "Sousou no Frieren" {
+		t.Errorf("got %q", got)
+	}
+	// languages of an object are sorted, so the fallback is always the same
+	if got := l.GetLocalString("fr", true); got != "Frieren" {
+		t.Errorf("wanted a stable fallback, got %q", got)
+	}
+}

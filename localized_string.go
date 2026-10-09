@@ -3,34 +3,61 @@ package mangodex
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
+	"slices"
 )
 
 // LocalisedStrings: A struct wrapping around a map containing each localised string.
 type LocalisedStrings struct {
+	// Values: First value for each language.
 	Values map[string]string
+	// List: All values in the order the API sent them (alt titles can have many per language).
+	List []LocalisedString
+}
+
+// LocalisedString: A single value and its language code.
+type LocalisedString struct {
+	Lang  string
+	Value string
 }
 
 func (l *LocalisedStrings) UnmarshalJSON(data []byte) error {
 	l.Values = map[string]string{}
+	l.List = nil
 
-	// First try if can unmarshal directly.
-	if err := json.Unmarshal(data, &l.Values); err == nil {
-		return nil
-	}
-
-	// If fail, try to unmarshal to array of maps.
+	// Either a single object or an array of objects (e.g. alt titles).
 	var locals []map[string]string
-	if err := json.Unmarshal(data, &locals); err != nil {
+	var local map[string]string
+	if err := json.Unmarshal(data, &local); err == nil {
+		locals = []map[string]string{local}
+	} else if err := json.Unmarshal(data, &locals); err != nil {
 		return fmt.Errorf("error unmarshalling localisedstring: %s", err.Error())
 	}
 
-	// If pass, then add each item in the array to flatten to one map.
 	for _, entry := range locals {
-		for key, value := range entry {
-			l.Values[key] = value
+		// a JSON object has no order, sort its languages so it's always the same
+		langs := slices.Sorted(maps.Keys(entry))
+		for _, lang := range langs {
+			value := entry[lang]
+			l.List = append(l.List, LocalisedString{lang, value})
+			// the API lists the official/most common value first
+			if _, ok := l.Values[lang]; !ok {
+				l.Values[lang] = value
+			}
 		}
 	}
 	return nil
+}
+
+// GetAll: Get all the localised strings for a particular language code, in order.
+func (l *LocalisedStrings) GetAll(langCode string) []string {
+	var values []string
+	for _, s := range l.List {
+		if s.Lang == langCode {
+			values = append(values, s.Value)
+		}
+	}
+	return values
 }
 
 // GetLocalString: Get the localised string for a particular language code.
@@ -43,10 +70,8 @@ func (l *LocalisedStrings) GetLocalString(langCode string, fallback bool) string
 		return s
 	}
 
-	if fallback {
-		for _, v := range l.Values {
-			return v
-		}
+	if fallback && len(l.List) != 0 {
+		return l.List[0].Value
 	}
 
 	return ""
