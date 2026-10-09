@@ -83,7 +83,7 @@ func (s *AtHomeServer) GetChapterPageContext(ctx context.Context, quality, filen
 	start := time.Now()
 	resp, err := s.client.Request(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		finalErr = fmt.Errorf("Failed to get chapter page data: %s", err.Error())
+		finalErr = fmt.Errorf("Failed to get chapter page data: %w", err)
 		if resp == nil || resp.Body == nil {
 			return nil, finalErr
 		}
@@ -93,7 +93,7 @@ func (s *AtHomeServer) GetChapterPageContext(ctx context.Context, quality, filen
 	// Even on failed requests, get all the bytes from the body
 	image, err := io.ReadAll(resp.Body)
 	if err != nil {
-		finalErr = fmt.Errorf("Failed to read all bytes from body: %s", finalErr.Error())
+		finalErr = fmt.Errorf("Failed to read all bytes from body: %w", err)
 	}
 
 	// Send report in the background.
