@@ -22,14 +22,14 @@ func TestMangaGet(t *testing.T) {
 		{"acc3ff9c-3494-4bdc-b474-96b24d0c160c", "Ochite Oborete"},
 		{"75ee72ab-c6bf-4b87-badd-de839156934c", "Death Note"},
 		{"a1c7c817-4e59-43b7-9365-09675a149a6f", "One Piece"},
-		{"eeb2ab0e-7dbc-4f0c-b476-8181d44217a8", "Tengoku Daimakyou"},
+		{"eeb2ab0e-7dbc-4f0c-b476-8181d44217a8", "Heavenly Delusion"},
 	}
 	for _, tt := range tests {
 		manga, err := client.Manga.Get(tt.id, url.Values{})
 		if err != nil {
 			t.Errorf("Getting manga by id %q failed: %s\n", tt.id, err.Error())
 		}
-		if name := manga.Attributes.Title.GetLocalString("en", false); name != tt.englishName {
+		if name := manga.GetTitle("en", false); name != tt.englishName {
 			t.Errorf("Manga name for %q doesn't match expected; wanted %q, gt %q", tt.id, tt.englishName, name)
 		}
 	}
