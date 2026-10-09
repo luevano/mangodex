@@ -135,11 +135,3 @@ const (
 	OrderAscending  = "asc"
 	OrderDescending = "desc"
 )
-
-type GetOrder struct {
-	Name          OrderEnum `json:"name,omitempty"`
-	CreatedAt     OrderEnum `json:"created_at,omitempty"`
-	UpdatedAt     OrderEnum `json:"updated_at,omitempty"`
-	FollowedCount OrderEnum `json:"followed_count,omitempty"`
-	Relevance     OrderEnum `json:"relevance,omitempty"`
-}

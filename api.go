@@ -30,11 +30,9 @@ type DexClient struct {
 	client *http.Client
 	header http.Header
 
-	common       service
-	refreshToken string // Unused
+	common service
 
 	// Services for MangaDex API.
-	Auth            *AuthService // Deprecated
 	Manga           *MangaService
 	Volume          *VolumeService
 	Chapter         *ChapterService
@@ -67,7 +65,6 @@ func NewDexClient(options Options) *DexClient {
 	dex.common.client = dex
 
 	// Reuse the common client for the other services
-	dex.Auth = (*AuthService)(&dex.common)
 	dex.Manga = (*MangaService)(&dex.common)
 	dex.Volume = (*VolumeService)(&dex.common)
 	dex.Chapter = (*ChapterService)(&dex.common)

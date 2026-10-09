@@ -47,12 +47,12 @@ type ScanlationGroupAttributes struct {
 // Get: Get scanlation group by scanlation group id.
 //
 // https://api.mangadex.org/docs/redoc.html#tag/ScanlationGroup/operation/get-group-id
-func (s ScanlationGroupService) Get(id string, params url.Values) (group *ScanlationGroup, err error) {
+func (s *ScanlationGroupService) Get(id string, params url.Values) (group *ScanlationGroup, err error) {
 	return s.GetContext(context.Background(), id, params)
 }
 
 // GetContext: Same as Get, with a context.
-func (s ScanlationGroupService) GetContext(ctx context.Context, id string, params url.Values) (group *ScanlationGroup, err error) {
+func (s *ScanlationGroupService) GetContext(ctx context.Context, id string, params url.Values) (group *ScanlationGroup, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(GroupGet, id)
 	u.RawQuery = params.Encode()
@@ -73,14 +73,14 @@ func (s ScanlationGroupService) GetContext(ctx context.Context, id string, param
 // List: Get scanlation group list.
 //
 // https://api.mangadex.org/docs/redoc.html#tag/ScanlationGroup/operation/get-search-group
-func (s ScanlationGroupService) List(params url.Values) (groupList []*ScanlationGroup, err error) {
+func (s *ScanlationGroupService) List(params url.Values) (groupList []*ScanlationGroup, err error) {
 	return s.ListContext(context.Background(), params)
 }
 
 // ListContext: Same as List, with a context.
-func (s ScanlationGroupService) ListContext(ctx context.Context, params url.Values) (groupList []*ScanlationGroup, err error) {
+func (s *ScanlationGroupService) ListContext(ctx context.Context, params url.Values) (groupList []*ScanlationGroup, err error) {
 	u, _ := url.Parse(BaseAPI)
-	u.Path = fmt.Sprintf(GroupList)
+	u.Path = GroupList
 	u.RawQuery = params.Encode()
 
 	var res DexResponse
