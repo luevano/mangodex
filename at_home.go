@@ -46,12 +46,17 @@ type AtHomeServer struct {
 //
 // https://api.mangadex.org/docs/redoc.html#tag/AtHome/operation/get-at-home-server-chapterId
 func (s *AtHomeService) Get(id string, params url.Values) (atHome *AtHomeServer, err error) {
+	return s.GetContext(context.Background(), id, params)
+}
+
+// GetContext: Same as Get, with a context.
+func (s *AtHomeService) GetContext(ctx context.Context, id string, params url.Values) (atHome *AtHomeServer, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(GetMDHomeURLPath, id)
 	u.RawQuery = params.Encode()
 
 	var res AtHomeServerResponse
-	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
+	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}
@@ -66,9 +71,13 @@ func (s *AtHomeService) Get(id string, params url.Values) (atHome *AtHomeServer,
 
 // GetChapterPage: Return page data for a chapter with the filename of that page.
 func (s *AtHomeServer) GetChapterPage(quality, filename string, report bool) ([]byte, error) {
+	return s.GetChapterPageContext(context.Background(), quality, filename, report)
+}
+
+// GetChapterPageContext: Same as GetChapterPage, with a context.
+func (s *AtHomeServer) GetChapterPageContext(ctx context.Context, quality, filename string, report bool) ([]byte, error) {
 	var finalErr error
 	url := strings.Join([]string{s.BaseURL, quality, s.Chapter.Hash, filename}, "/")
-	ctx := context.Background()
 
 	// Start timing how long to get all bytes for the file.
 	start := time.Now()
@@ -89,6 +98,8 @@ func (s *AtHomeServer) GetChapterPage(quality, filename string, report bool) ([]
 
 	// Send report in the background.
 	if report {
+		// the report outlives this call, so it must not be cancelled with ctx.
+		reportCtx := context.WithoutCancel(ctx)
 		go func() {
 			r := &reportPayload{
 				URL:      url,
@@ -99,7 +110,7 @@ func (s *AtHomeServer) GetChapterPage(quality, filename string, report bool) ([]
 			}
 			rBytes, err := json.Marshal(r)
 			if err == nil {
-				s.client.Request(ctx, http.MethodPost, MDHomeReportURL, bytes.NewBuffer(rBytes))
+				s.client.Request(reportCtx, http.MethodPost, MDHomeReportURL, bytes.NewBuffer(rBytes))
 			}
 		}()
 	}

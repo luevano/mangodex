@@ -88,12 +88,17 @@ type VolumeChapter struct {
 //
 // TODO: integrate manga/id/aggregate to manga.go?
 func (s *VolumeService) List(id string, params url.Values) (volumeList map[string]*Volume, err error) {
+	return s.ListContext(context.Background(), id, params)
+}
+
+// ListContext: Same as List, with a context.
+func (s *VolumeService) ListContext(ctx context.Context, id string, params url.Values) (volumeList map[string]*Volume, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(MangaAggregatePath, id)
 	u.RawQuery = params.Encode()
 
 	var res VolumeResponse
-	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
+	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}

@@ -77,12 +77,17 @@ type MangaAttributes struct {
 //
 // https://api.mangadex.org/docs/redoc.html#tag/Manga/operation/get-manga-id
 func (s *MangaService) Get(id string, params url.Values) (manga *Manga, err error) {
+	return s.GetContext(context.Background(), id, params)
+}
+
+// GetContext: Same as Get, with a context.
+func (s *MangaService) GetContext(ctx context.Context, id string, params url.Values) (manga *Manga, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(MangaPath, id)
 	u.RawQuery = params.Encode()
 
 	var res MangaResponse
-	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
+	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}
@@ -98,12 +103,17 @@ func (s *MangaService) Get(id string, params url.Values) (manga *Manga, err erro
 //
 // https://api.mangadex.org/docs/redoc.html#tag/Manga/operation/get-search-manga
 func (s *MangaService) List(params url.Values) (mangaList []*Manga, err error) {
+	return s.ListContext(context.Background(), params)
+}
+
+// ListContext: Same as List, with a context.
+func (s *MangaService) ListContext(ctx context.Context, params url.Values) (mangaList []*Manga, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = MangaListPath
 	u.RawQuery = params.Encode()
 
 	var res DexResponse
-	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
+	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}

@@ -48,12 +48,17 @@ type ScanlationGroupAttributes struct {
 //
 // https://api.mangadex.org/docs/redoc.html#tag/ScanlationGroup/operation/get-group-id
 func (s ScanlationGroupService) Get(id string, params url.Values) (group *ScanlationGroup, err error) {
+	return s.GetContext(context.Background(), id, params)
+}
+
+// GetContext: Same as Get, with a context.
+func (s ScanlationGroupService) GetContext(ctx context.Context, id string, params url.Values) (group *ScanlationGroup, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(GroupGet, id)
 	u.RawQuery = params.Encode()
 
 	var res DexResponse
-	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
+	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}
@@ -69,12 +74,17 @@ func (s ScanlationGroupService) Get(id string, params url.Values) (group *Scanla
 //
 // https://api.mangadex.org/docs/redoc.html#tag/ScanlationGroup/operation/get-search-group
 func (s ScanlationGroupService) List(params url.Values) (groupList []*ScanlationGroup, err error) {
+	return s.ListContext(context.Background(), params)
+}
+
+// ListContext: Same as List, with a context.
+func (s ScanlationGroupService) ListContext(ctx context.Context, params url.Values) (groupList []*ScanlationGroup, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(GroupList)
 	u.RawQuery = params.Encode()
 
 	var res DexResponse
-	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
+	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}

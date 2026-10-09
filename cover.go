@@ -37,12 +37,17 @@ type CoverAttributes struct {
 //
 // https://api.mangadex.org/docs/redoc.html#tag/Cover/operation/get-cover
 func (s *CoverService) List(params url.Values) (coverList []*Cover, err error) {
+	return s.ListContext(context.Background(), params)
+}
+
+// ListContext: Same as List, with a context.
+func (s *CoverService) ListContext(ctx context.Context, params url.Values) (coverList []*Cover, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = CoverListPath
 	u.RawQuery = params.Encode()
 
 	var res DexResponse
-	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
+	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}

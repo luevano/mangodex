@@ -43,11 +43,16 @@ type UserAttributes struct {
 //
 // https://api.mangadex.org/docs/redoc.html#tag/User/operation/get-user-id
 func (s *UserService) Get(id string) (user *User, err error) {
+	return s.GetContext(context.Background(), id)
+}
+
+// GetContext: Same as Get, with a context.
+func (s *UserService) GetContext(ctx context.Context, id string) (user *User, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(GetUserPath, id)
 
 	var res UserResponse
-	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
+	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}

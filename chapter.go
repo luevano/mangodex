@@ -58,12 +58,17 @@ type ChapterAttributes struct {
 //
 // https://api.mangadex.org/docs/redoc.html#tag/Chapter/operation/get-chapter-id
 func (s *ChapterService) Get(id string, params url.Values) (chapter *Chapter, err error) {
+	return s.GetContext(context.Background(), id, params)
+}
+
+// GetContext: Same as Get, with a context.
+func (s *ChapterService) GetContext(ctx context.Context, id string, params url.Values) (chapter *Chapter, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(ChapterPath, id)
 	u.RawQuery = params.Encode()
 
 	var res DexResponse
-	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
+	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}
@@ -79,12 +84,17 @@ func (s *ChapterService) Get(id string, params url.Values) (chapter *Chapter, er
 //
 // https://api.mangadex.org/docs/redoc.html#tag/Chapter/operation/get-chapter
 func (s *ChapterService) List(params url.Values) (chapterList []*Chapter, err error) {
+	return s.ListContext(context.Background(), params)
+}
+
+// ListContext: Same as List, with a context.
+func (s *ChapterService) ListContext(ctx context.Context, params url.Values) (chapterList []*Chapter, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = ChapterListPath
 	u.RawQuery = params.Encode()
 
 	var res DexResponse
-	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
+	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}
@@ -102,12 +112,17 @@ func (s *ChapterService) List(params url.Values) (chapterList []*Chapter, err er
 //
 // TODO: move this to manga.go?
 func (s *ChapterService) GetMangaChapters(id string, params url.Values) (chapterList []*Chapter, err error) {
+	return s.GetMangaChaptersContext(context.Background(), id, params)
+}
+
+// GetMangaChaptersContext: Same as GetMangaChapters, with a context.
+func (s *ChapterService) GetMangaChaptersContext(ctx context.Context, id string, params url.Values) (chapterList []*Chapter, err error) {
 	u, _ := url.Parse(BaseAPI)
 	u.Path = fmt.Sprintf(MangaChaptersPath, id)
 	u.RawQuery = params.Encode()
 
 	var res DexResponse
-	err = s.client.RequestAndDecode(context.Background(), http.MethodGet, u.String(), nil, &res)
+	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
 		return nil, err
 	}
