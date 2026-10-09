@@ -1,8 +1,8 @@
 # mangodex
 
-Golang API wrapper for MangaDex v5's API.
+Golang API wrapper for MangaDex v5's API (5.13.1).
 
-Full API documentation is found [here](https://api.mangadex.org/docs.html).
+Full API documentation is found [here](https://api.mangadex.org/docs/).
 
 > **Warning**
 > 
@@ -30,7 +30,7 @@ import (
 
 func main() {
     // Create new client.
-    c := mangodex.NewDexClient()
+    c := mangodex.NewDexClient(mangodex.DefaultOptions())
 
     // Create search params.
     params := url.Values{}
@@ -44,10 +44,16 @@ func main() {
     }
     for _, manga := range mangaList {
         // Do something
-        fmt.Println(manga.GetTitle("en"))
+        fmt.Println(manga.GetTitle("en", true))
     }
 }
 ```
+
+Every request method has a `...Context` version that takes a `context.Context` (e.g.
+`c.Manga.ListContext(ctx, params)`), the plain one uses `context.Background()`.
+
+Follow MangaDex's [usage rules](https://api.mangadex.org/docs/2-limitations/): don't spoof the
+User-Agent (the default one identifies this library), stay around 5 requests per second.
 
 ## Contributing
 
