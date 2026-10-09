@@ -11,13 +11,17 @@ type ErrorResponse struct {
 	Errors []Error `json:"errors"`
 }
 
-// GetErrors: Get the errors for this particular request.
+// GetErrors: Get the errors for this particular request, in one line.
 func (er *ErrorResponse) GetErrors() string {
-	var errors strings.Builder
+	var errors []string
 	for _, err := range er.Errors {
-		errors.WriteString(fmt.Sprintf("%s: %s\n", err.Title, err.Detail))
+		if err.Detail == "" {
+			errors = append(errors, err.Title)
+			continue
+		}
+		errors = append(errors, fmt.Sprintf("%s: %s", err.Title, err.Detail))
 	}
-	return errors.String()
+	return strings.Join(errors, "; ")
 }
 
 // Error: Struct containing details of an error.

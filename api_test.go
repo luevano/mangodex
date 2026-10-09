@@ -8,7 +8,13 @@ import (
 
 // TODO: refactor all the tests
 
-var client = NewDexClient(DefaultOptions())
+var client = func() *DexClient {
+	c, err := NewDexClient(DefaultOptions())
+	if err != nil {
+		panic(err)
+	}
+	return c
+}()
 
 //
 // manga.go

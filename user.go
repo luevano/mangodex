@@ -48,18 +48,18 @@ func (s *UserService) Get(id string) (user *User, err error) {
 
 // GetContext: Same as Get, with a context.
 func (s *UserService) GetContext(ctx context.Context, id string) (user *User, err error) {
-	u, _ := url.Parse(BaseAPI)
+	u, _ := url.Parse(s.client.baseAPI)
 	u.Path = fmt.Sprintf(GetUserPath, id)
 
 	var res UserResponse
 	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get user %q: %w", id, err)
 	}
 	err = json.Unmarshal(res.Data, &user)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get user %q: %w", id, err)
 	}
 
-	return user, err
+	return user, nil
 }

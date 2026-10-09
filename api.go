@@ -29,6 +29,8 @@ type DexResponse struct {
 type DexClient struct {
 	client *http.Client
 	header http.Header
+	// BaseAPI, only changed in tests
+	baseAPI string
 
 	common service
 
@@ -48,9 +50,9 @@ type service struct {
 }
 
 // NewDexClient: New MangaDex client.
-func NewDexClient(options Options) *DexClient {
+func NewDexClient(options Options) (*DexClient, error) {
 	if err := options.validate(); err != nil {
-		panic(fmt.Errorf("Invalid MangoDex client options: %s", err.Error()))
+		return nil, fmt.Errorf("mangodex: invalid options: %w", err)
 	}
 
 	client := http.Client{}
@@ -59,8 +61,9 @@ func NewDexClient(options Options) *DexClient {
 	header.Set("User-Agent", options.UserAgent)
 
 	dex := &DexClient{
-		client: &client,
-		header: header,
+		client:  &client,
+		header:  header,
+		baseAPI: BaseAPI,
 	}
 	dex.common.client = dex
 
@@ -73,46 +76,41 @@ func NewDexClient(options Options) *DexClient {
 	dex.AtHome = (*AtHomeService)(&dex.common)
 	dex.ScanlationGroup = (*ScanlationGroupService)(&dex.common)
 
-	return dex
+	return dex, nil
 }
 
 // Request: Sends a request to the MangaDex API.
 func (c *DexClient) Request(ctx context.Context, method, url string, body io.Reader) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("mangodex: %s %s: %w", method, url, err)
 	}
 	req.Header = c.header
+	path := req.URL.Path
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("mangodex: %s %s: %w", method, path, err)
 	}
-
-	switch resp.StatusCode {
-	case 200:
+	if resp.StatusCode == http.StatusOK {
 		return resp, nil
-	case 403:
-		return nil, fmt.Errorf("403 Forbidden: expired MangaDex@Home url, or temporarily IP banned")
-	case 429:
-		return nil, fmt.Errorf("429 Too Many Requests: Retry-After: %d", retryAfterSecs(resp.Header))
-	case 503:
-		// Special case for maintenance responses.
-		return nil, fmt.Errorf("503 Service Unavailable: MangaDex is temporarily down for maintenance")
-	default:
-		defer resp.Body.Close()
-		var er ErrorResponse
-		var errMsg string
-		err = json.NewDecoder(resp.Body).Decode(&er)
-		// Sometimes the error page is just plain HTML, so it can't be decoded into ErrorResponse
-		if err != nil {
-			errMsg = fmt.Sprintf("Failed to decode into ErrorResponse (HTML response?): %s", err.Error())
-		} else {
-			errMsg = er.GetErrors()
-		}
-
-		return nil, fmt.Errorf("Non-200 status code -> (%d): %s", resp.StatusCode, errMsg)
 	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return nil, &RateLimitError{Method: method, Path: path, RetryAfter: retryAfter(resp.Header)}
+	}
+
+	// the body is usually an ErrorResponse, but can also be an HTML error page
+	var er ErrorResponse
+	message := ""
+	if err := json.NewDecoder(resp.Body).Decode(&er); err == nil {
+		message = er.GetErrors()
+	}
+	if message == "" && resp.StatusCode == http.StatusForbidden {
+		message = "expired MangaDex@Home url, or temporarily IP banned"
+	}
+	return nil, &HTTPError{Method: method, Path: path, StatusCode: resp.StatusCode, Message: message}
 }
 
 // RequestAndDecode: Convenience wrapper to also decode response to given interface.
@@ -123,18 +121,21 @@ func (c *DexClient) RequestAndDecode(ctx context.Context, method, url string, bo
 	}
 	defer resp.Body.Close()
 
-	return json.NewDecoder(resp.Body).Decode(&res)
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		return fmt.Errorf("mangodex: %s %s: decode response: %w", method, resp.Request.URL.Path, err)
+	}
+	return nil
 }
 
-// retryAfterSecs: Seconds to wait after a 429, the endpoint-specific limits only send
+// retryAfter: How long to wait after a 429, the endpoint-specific limits only send
 // X-RateLimit-Retry-After (a unix timestamp of when the limit resets).
-func retryAfterSecs(header http.Header) int {
+func retryAfter(header http.Header) time.Duration {
 	if secs, err := strconv.Atoi(header.Get("Retry-After")); err == nil {
-		return secs
+		return time.Duration(secs) * time.Second
 	}
 	if reset, err := strconv.ParseInt(header.Get("X-RateLimit-Retry-After"), 10, 64); err == nil {
-		return max(1, int(reset-time.Now().Unix()))
+		return max(time.Second, time.Until(time.Unix(reset, 0)).Round(time.Second))
 	}
 	// no hint, MangaDex's general limit is ~5 requests per second
-	return 1
+	return time.Second
 }

@@ -31,7 +31,7 @@ func (l *LocalisedStrings) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &local); err == nil {
 		locals = []map[string]string{local}
 	} else if err := json.Unmarshal(data, &locals); err != nil {
-		return fmt.Errorf("error unmarshalling localisedstring: %s", err.Error())
+		return fmt.Errorf("decode localised strings: %w", err)
 	}
 
 	for _, entry := range locals {

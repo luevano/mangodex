@@ -53,18 +53,18 @@ func (s *ScanlationGroupService) Get(id string, params url.Values) (group *Scanl
 
 // GetContext: Same as Get, with a context.
 func (s *ScanlationGroupService) GetContext(ctx context.Context, id string, params url.Values) (group *ScanlationGroup, err error) {
-	u, _ := url.Parse(BaseAPI)
+	u, _ := url.Parse(s.client.baseAPI)
 	u.Path = fmt.Sprintf(GroupGet, id)
 	u.RawQuery = params.Encode()
 
 	var res DexResponse
 	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get scanlation group %q: %w", id, err)
 	}
 	err = json.Unmarshal(res.Data, &group)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get scanlation group %q: %w", id, err)
 	}
 
 	return group, nil
@@ -79,18 +79,18 @@ func (s *ScanlationGroupService) List(params url.Values) (groupList []*Scanlatio
 
 // ListContext: Same as List, with a context.
 func (s *ScanlationGroupService) ListContext(ctx context.Context, params url.Values) (groupList []*ScanlationGroup, err error) {
-	u, _ := url.Parse(BaseAPI)
+	u, _ := url.Parse(s.client.baseAPI)
 	u.Path = GroupList
 	u.RawQuery = params.Encode()
 
 	var res DexResponse
 	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list scanlation groups: %w", err)
 	}
 	err = json.Unmarshal(res.Data, &groupList)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list scanlation groups: %w", err)
 	}
 
 	return groupList, nil

@@ -51,14 +51,14 @@ func (s *AtHomeService) Get(id string, params url.Values) (atHome *AtHomeServer,
 
 // GetContext: Same as Get, with a context.
 func (s *AtHomeService) GetContext(ctx context.Context, id string, params url.Values) (atHome *AtHomeServer, err error) {
-	u, _ := url.Parse(BaseAPI)
+	u, _ := url.Parse(s.client.baseAPI)
 	u.Path = fmt.Sprintf(GetMDHomeURLPath, id)
 	u.RawQuery = params.Encode()
 
 	var res AtHomeServerResponse
 	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get MangaDex@Home server for chapter %q: %w", id, err)
 	}
 
 	atHome = &AtHomeServer{
@@ -83,7 +83,7 @@ func (s *AtHomeServer) GetChapterPageContext(ctx context.Context, quality, filen
 	start := time.Now()
 	resp, err := s.client.Request(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		finalErr = fmt.Errorf("Failed to get chapter page data: %w", err)
+		finalErr = fmt.Errorf("get chapter page %q: %w", filename, err)
 		if resp == nil || resp.Body == nil {
 			return nil, finalErr
 		}
@@ -93,7 +93,7 @@ func (s *AtHomeServer) GetChapterPageContext(ctx context.Context, quality, filen
 	// Even on failed requests, get all the bytes from the body
 	image, err := io.ReadAll(resp.Body)
 	if err != nil {
-		finalErr = fmt.Errorf("Failed to read all bytes from body: %w", err)
+		finalErr = fmt.Errorf("get chapter page %q: read response: %w", filename, err)
 	}
 
 	// Send report in the background.

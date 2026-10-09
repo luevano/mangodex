@@ -3,6 +3,7 @@ package mangodex
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 )
@@ -42,18 +43,18 @@ func (s *CoverService) List(params url.Values) (coverList []*Cover, err error) {
 
 // ListContext: Same as List, with a context.
 func (s *CoverService) ListContext(ctx context.Context, params url.Values) (coverList []*Cover, err error) {
-	u, _ := url.Parse(BaseAPI)
+	u, _ := url.Parse(s.client.baseAPI)
 	u.Path = CoverListPath
 	u.RawQuery = params.Encode()
 
 	var res DexResponse
 	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list covers: %w", err)
 	}
 	err = json.Unmarshal(res.Data, &coverList)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list covers: %w", err)
 	}
 
 	return coverList, nil

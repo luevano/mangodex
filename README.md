@@ -30,7 +30,10 @@ import (
 
 func main() {
     // Create new client.
-    c := mangodex.NewDexClient(mangodex.DefaultOptions())
+    c, err := mangodex.NewDexClient(mangodex.DefaultOptions())
+    if err != nil {
+        panic(err)
+    }
 
     // Create search params.
     params := url.Values{}
@@ -51,6 +54,9 @@ func main() {
 
 Every request method has a `...Context` version that takes a `context.Context` (e.g.
 `c.Manga.ListContext(ctx, params)`), the plain one uses `context.Background()`.
+
+Errors can be checked with `errors.Is` against `ErrNotFound`, `ErrRateLimited` and `ErrMaintenance`, or
+inspected with `errors.As` as `*HTTPError` (non-200 status) or `*RateLimitError` (429, with `RetryAfter`).
 
 Follow MangaDex's [usage rules](https://api.mangadex.org/docs/2-limitations/): don't spoof the
 User-Agent (the default one identifies this library), stay around 5 requests per second.

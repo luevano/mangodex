@@ -82,18 +82,18 @@ func (s *MangaService) Get(id string, params url.Values) (manga *Manga, err erro
 
 // GetContext: Same as Get, with a context.
 func (s *MangaService) GetContext(ctx context.Context, id string, params url.Values) (manga *Manga, err error) {
-	u, _ := url.Parse(BaseAPI)
+	u, _ := url.Parse(s.client.baseAPI)
 	u.Path = fmt.Sprintf(MangaPath, id)
 	u.RawQuery = params.Encode()
 
 	var res MangaResponse
 	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get manga %q: %w", id, err)
 	}
 	err = json.Unmarshal(res.Data, &manga)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get manga %q: %w", id, err)
 	}
 
 	return manga, nil
@@ -108,18 +108,18 @@ func (s *MangaService) List(params url.Values) (mangaList []*Manga, err error) {
 
 // ListContext: Same as List, with a context.
 func (s *MangaService) ListContext(ctx context.Context, params url.Values) (mangaList []*Manga, err error) {
-	u, _ := url.Parse(BaseAPI)
+	u, _ := url.Parse(s.client.baseAPI)
 	u.Path = MangaListPath
 	u.RawQuery = params.Encode()
 
 	var res DexResponse
 	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list manga: %w", err)
 	}
 	err = json.Unmarshal(res.Data, &mangaList)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list manga: %w", err)
 	}
 
 	return mangaList, nil

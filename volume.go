@@ -32,13 +32,13 @@ func (v *VolumeList) UnmarshalJSON(data []byte) error {
 	var noVolumes []any
 	if err := json.Unmarshal(data, &noVolumes); err == nil {
 		if len(noVolumes) != 0 {
-			return fmt.Errorf("unexpected volume list; expected 0 volumes, got %d", len(noVolumes))
+			return fmt.Errorf("decode volume list: expected 0 volumes, got %d", len(noVolumes))
 		}
 		*v = map[string]*Volume{}
 		return nil
 	}
 
-	return fmt.Errorf("unexpected volume list type: %s", string(data))
+	return fmt.Errorf("decode volume list: unexpected json %.100s", data)
 }
 
 // VolumeService : Provides volume services provided by the API (manga/id/aggregate).
@@ -65,13 +65,13 @@ func (v *VolumeChapterList) UnmarshalJSON(data []byte) error {
 	var oneChapter []VolumeChapter
 	if err := json.Unmarshal(data, &oneChapter); err == nil {
 		if len(oneChapter) != 1 {
-			return fmt.Errorf("unexpected volume chapter list; expected 1 chapter, got %d", len(oneChapter))
+			return fmt.Errorf("decode volume chapter list: expected 1 chapter, got %d", len(oneChapter))
 		}
 		*v = map[string]VolumeChapter{oneChapter[0].Chapter: oneChapter[0]}
 		return nil
 	}
 
-	return fmt.Errorf("unexpected volume chapter list type: %s", string(data))
+	return fmt.Errorf("decode volume chapter list: unexpected json %.100s", data)
 }
 
 // VolumeChapter: Chapter data specific to the volumes list. This is different to the actual Chapter data.
@@ -94,14 +94,14 @@ func (s *VolumeService) List(id string, params url.Values) (volumeList map[strin
 
 // ListContext: Same as List, with a context.
 func (s *VolumeService) ListContext(ctx context.Context, id string, params url.Values) (volumeList map[string]*Volume, err error) {
-	u, _ := url.Parse(BaseAPI)
+	u, _ := url.Parse(s.client.baseAPI)
 	u.Path = fmt.Sprintf(MangaAggregatePath, id)
 	u.RawQuery = params.Encode()
 
 	var res VolumeResponse
 	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list volumes for manga %q: %w", id, err)
 	}
 
 	return res.Volumes, nil

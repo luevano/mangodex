@@ -10,18 +10,18 @@ import (
 
 // Tests that don't hit the API.
 
-func TestRetryAfterSecs(t *testing.T) {
+func TestRetryAfter(t *testing.T) {
 	tests := []struct {
 		header http.Header
-		want   int
+		want   time.Duration
 	}{
-		{http.Header{"Retry-After": {"7"}}, 7},
-		{http.Header{"X-Ratelimit-Retry-After": {strconv.FormatInt(time.Now().Unix()+30, 10)}}, 30},
-		{http.Header{}, 1},
+		{http.Header{"Retry-After": {"7"}}, 7 * time.Second},
+		{http.Header{"X-Ratelimit-Retry-After": {strconv.FormatInt(time.Now().Unix()+30, 10)}}, 30 * time.Second},
+		{http.Header{}, time.Second},
 	}
 	for _, tt := range tests {
-		if got := retryAfterSecs(tt.header); got < tt.want-1 || got > tt.want {
-			t.Errorf("headers %v: wanted %d, got %d", tt.header, tt.want, got)
+		if got := retryAfter(tt.header); got < tt.want-time.Second || got > tt.want {
+			t.Errorf("headers %v: wanted %s, got %s", tt.header, tt.want, got)
 		}
 	}
 }

@@ -65,18 +65,18 @@ func (s *ChapterService) Get(id string, params url.Values) (chapter *Chapter, er
 
 // GetContext: Same as Get, with a context.
 func (s *ChapterService) GetContext(ctx context.Context, id string, params url.Values) (chapter *Chapter, err error) {
-	u, _ := url.Parse(BaseAPI)
+	u, _ := url.Parse(s.client.baseAPI)
 	u.Path = fmt.Sprintf(ChapterPath, id)
 	u.RawQuery = params.Encode()
 
 	var res DexResponse
 	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get chapter %q: %w", id, err)
 	}
 	err = json.Unmarshal(res.Data, &chapter)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get chapter %q: %w", id, err)
 	}
 
 	return chapter, nil
@@ -91,18 +91,18 @@ func (s *ChapterService) List(params url.Values) (chapterList []*Chapter, err er
 
 // ListContext: Same as List, with a context.
 func (s *ChapterService) ListContext(ctx context.Context, params url.Values) (chapterList []*Chapter, err error) {
-	u, _ := url.Parse(BaseAPI)
+	u, _ := url.Parse(s.client.baseAPI)
 	u.Path = ChapterListPath
 	u.RawQuery = params.Encode()
 
 	var res DexResponse
 	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list chapters: %w", err)
 	}
 	err = json.Unmarshal(res.Data, &chapterList)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list chapters: %w", err)
 	}
 
 	return chapterList, nil
@@ -119,18 +119,18 @@ func (s *ChapterService) GetMangaChapters(id string, params url.Values) (chapter
 
 // GetMangaChaptersContext: Same as GetMangaChapters, with a context.
 func (s *ChapterService) GetMangaChaptersContext(ctx context.Context, id string, params url.Values) (chapterList []*Chapter, err error) {
-	u, _ := url.Parse(BaseAPI)
+	u, _ := url.Parse(s.client.baseAPI)
 	u.Path = fmt.Sprintf(MangaChaptersPath, id)
 	u.RawQuery = params.Encode()
 
 	var res DexResponse
 	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list chapters for manga %q: %w", id, err)
 	}
 	err = json.Unmarshal(res.Data, &chapterList)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list chapters for manga %q: %w", id, err)
 	}
 
 	return chapterList, nil
