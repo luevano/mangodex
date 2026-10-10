@@ -38,7 +38,7 @@ func main() {
     // Create search params.
     params := url.Values{}
     params.Set("title", "tengoku daimakyou")
-    params.Set("translatedLanguage[]", "en")
+    params.Set("availableTranslatedLanguage[]", "en")
 
     // Get list of mangas by search query.
     mangaList, err := c.Manga.List(params)
