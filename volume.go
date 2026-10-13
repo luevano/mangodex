@@ -86,8 +86,6 @@ type VolumeChapter struct {
 // List: Get a list of manga volumes.
 //
 // https://api.mangadex.org/docs/redoc.html#tag/Manga/operation/get-manga-aggregate
-//
-// TODO: integrate manga/id/aggregate to manga.go?
 func (s *VolumeService) List(id string, params url.Values) (volumeList map[string]*Volume, err error) {
 	return s.ListContext(context.Background(), id, params)
 }

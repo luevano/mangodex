@@ -11,8 +11,6 @@ import (
 const (
 	MangaPath     = "/manga/%s"
 	MangaListPath = "/manga"
-	// CheckIfMangaFollowedPath = "/user/follows/manga/%s"
-	// ToggleMangaFollowPath    = "/manga/%s/follow"
 )
 
 // MangaResponse: Manga response type, this differs from the common DexResponse type. Only used for some responses.

@@ -10,8 +10,6 @@ import (
 
 const (
 	GetUserPath = "/user/%s"
-	// GetUserFollowedMangaListPath = "/user/follows/manga"
-	// GetLoggedUserPath            = "/user/me"
 )
 
 // UserResponse: User response type, this differs from the common DexResponse type.

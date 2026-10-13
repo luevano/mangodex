@@ -39,7 +39,7 @@ type DexClient struct {
 	Volume          *VolumeService
 	Chapter         *ChapterService
 	Cover           *CoverService
-	User            *UserService // Deprecated
+	User            *UserService
 	AtHome          *AtHomeService
 	ScanlationGroup *ScanlationGroupService
 }

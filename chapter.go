@@ -11,8 +11,7 @@ import (
 const (
 	ChapterPath       = "/chapter/%s"
 	ChapterListPath   = "/chapter"
-	MangaChaptersPath = "/manga/%s/feed" // TODO: move to manga.go?
-	// MangaReadMarkersPath = "/manga/%s/read"
+	MangaChaptersPath = "/manga/%s/feed"
 )
 
 // ChapterService: Provides chapter services provided by the API.
@@ -111,8 +110,6 @@ func (s *ChapterService) ListContext(ctx context.Context, params url.Values) (ch
 // GetMangaChapters: Get a list of chapters for a manga by manga id.
 //
 // https://api.mangadex.org/docs/redoc.html#tag/Manga/operation/get-manga-id-feed
-//
-// TODO: move this to manga.go?
 func (s *ChapterService) GetMangaChapters(id string, params url.Values) (chapterList []*Chapter, err error) {
 	return s.GetMangaChaptersContext(context.Background(), id, params)
 }
