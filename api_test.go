@@ -2,11 +2,12 @@ package mangodex
 
 import (
 	"net/url"
+	"os"
 	"strconv"
 	"testing"
 )
 
-// TODO: refactor all the tests
+// Tests against the live API, only run with MANGODEX_LIVE=1 to avoid hitting the API on every run.
 
 var client = func() *DexClient {
 	c, err := NewDexClient(DefaultOptions())
@@ -16,11 +17,18 @@ var client = func() *DexClient {
 	return c
 }()
 
+func skipUnlessLive(t *testing.T) {
+	if os.Getenv("MANGODEX_LIVE") != "1" {
+		t.Skip("set MANGODEX_LIVE=1 to run tests against the live API")
+	}
+}
+
 //
 // manga.go
 //
 
-func TestMangaGet(t *testing.T) {
+func TestLiveMangaGet(t *testing.T) {
+	skipUnlessLive(t)
 	tests := []struct {
 		id          string
 		englishName string
@@ -41,7 +49,8 @@ func TestMangaGet(t *testing.T) {
 	}
 }
 
-func TestMangaList(t *testing.T) {
+func TestLiveMangaList(t *testing.T) {
+	skipUnlessLive(t)
 	params := url.Values{}
 	params.Set("limit", strconv.Itoa(100))
 	params.Set("offset", strconv.Itoa(0))
@@ -54,7 +63,8 @@ func TestMangaList(t *testing.T) {
 	}
 }
 
-func TestMangaGroupList(t *testing.T) {
+func TestLiveMangaGroupList(t *testing.T) {
+	skipUnlessLive(t)
 	list, err := client.Manga.List(url.Values{
 		"limit":      {"100"},
 		"group":      {"71ade5cd-93cf-4397-a5cc-d5c6181d8697"},
@@ -67,14 +77,16 @@ func TestMangaGroupList(t *testing.T) {
 
 // scanlation_group.go
 
-func TestGroupGet(t *testing.T) {
+func TestLiveGroupGet(t *testing.T) {
+	skipUnlessLive(t)
 	group, err := client.ScanlationGroup.Get("71ade5cd-93cf-4397-a5cc-d5c6181d8697", url.Values{})
 	if err != nil && group.Id == "71ade5cd-93cf-4397-a5cc-d5c6181d8697" {
 		t.Errorf("Getting Group failed: %s\n", err.Error())
 	}
 }
 
-func TestGroupList(t *testing.T) {
+func TestLiveGroupList(t *testing.T) {
+	skipUnlessLive(t)
 	params := url.Values{}
 	params.Set("limit", strconv.Itoa(100))
 	params.Set("offset", strconv.Itoa(0))
@@ -89,7 +101,8 @@ func TestGroupList(t *testing.T) {
 // chapter.go
 //
 
-func TestChapterGet(t *testing.T) {
+func TestLiveChapterGet(t *testing.T) {
+	skipUnlessLive(t)
 	chapter, err := client.Chapter.Get("eadc095d-e672-4136-98d0-41a98161ad0e", url.Values{})
 	if err != nil && chapter.GetTitle() == "Attachment" {
 		t.Errorf("Getting Manga from Group failed: %s\n", err.Error())
@@ -100,7 +113,8 @@ func TestChapterGet(t *testing.T) {
 // cover.go
 //
 
-func TestCover(t *testing.T) {
+func TestLiveCover(t *testing.T) {
+	skipUnlessLive(t)
 	params := url.Values{}
 	params.Add("manga[]", "eadc095d-e672-4136-98d0-41a98161ad0e")
 
@@ -114,7 +128,8 @@ func TestCover(t *testing.T) {
 // volume.go
 //
 
-func TestVolume(t *testing.T) {
+func TestLiveVolume(t *testing.T) {
+	skipUnlessLive(t)
 	tests := []struct {
 		id    string
 		manga string
@@ -134,8 +149,9 @@ func TestVolume(t *testing.T) {
 	}
 }
 
-// TODO: change to a more reliable test, this can change at any time whenever some volumes/chapters are added
-func TestVolumeEmpty(t *testing.T) {
+// depends on the live data, breaks if chapters are ever added
+func TestLiveVolumeEmpty(t *testing.T) {
+	skipUnlessLive(t)
 	// Demon Slayer (not Kimetsu No Yaiba) uuid, at the time of writing this it doesn't have any chapters/volumes
 	// https://mangadex.org/title/0acb51ef-3d71-4993-81a0-8cbcfb88fa9e/demon-slayer
 	id := "0acb51ef-3d71-4993-81a0-8cbcfb88fa9e"
@@ -155,7 +171,8 @@ func TestVolumeEmpty(t *testing.T) {
 // user.go
 //
 
-func TestUser(t *testing.T) {
+func TestLiveUser(t *testing.T) {
+	skipUnlessLive(t)
 	// Newtonius uuid
 	id := "904b5ab6-7e00-4b7e-a6c6-3dda7860b69e"
 	_, err := client.User.Get(id)
