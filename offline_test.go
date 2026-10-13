@@ -3,6 +3,8 @@ package mangodex
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"testing"
 	"time"
@@ -93,5 +95,27 @@ func TestHTTPClientOption(t *testing.T) {
 	}
 	if c.client != given {
 		t.Error("the given client should be used")
+	}
+}
+
+func TestAPIRequestInterval(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"result":"ok","data":[]}`))
+	}))
+	defer server.Close()
+	c, err := NewDexClient(DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.baseAPI = server.URL
+
+	start := time.Now()
+	for range 3 {
+		if _, err := c.Manga.List(url.Values{}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if elapsed := time.Since(start); elapsed < 2*apiInterval {
+		t.Errorf("3 requests took %s, wanted at least %s", elapsed, 2*apiInterval)
 	}
 }

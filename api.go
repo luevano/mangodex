@@ -8,12 +8,17 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
+	"sync"
 	"time"
 )
 
 const (
 	BaseAPI = "https://api.mangadex.org"
 )
+
+// apiInterval keeps to MangaDex's limit of ~5 api requests per second per IP.
+const apiInterval = 200 * time.Millisecond
 
 // maxBodySize caps the responses read: api json and page images.
 const maxBodySize = 100 << 20
@@ -35,6 +40,9 @@ type DexClient struct {
 	// BaseAPI and MDHomeReportURL, only changed in tests
 	baseAPI   string
 	reportURL string
+
+	lastRequest   time.Time
+	lastRequestMu sync.Mutex
 
 	common service
 
@@ -96,6 +104,12 @@ func (c *DexClient) Request(ctx context.Context, method, url string, body io.Rea
 	req.Header = c.header
 	path := req.URL.Path
 
+	// MangaDex@Home nodes and reports don't count
+	if strings.HasPrefix(url, c.baseAPI) {
+		if err := c.waitForNextRequest(ctx); err != nil {
+			return nil, fmt.Errorf("mangodex: %s %s: %w", method, path, err)
+		}
+	}
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("mangodex: %s %s: %w", method, path, err)
@@ -119,6 +133,21 @@ func (c *DexClient) Request(ctx context.Context, method, url string, body io.Rea
 		message = "expired MangaDex@Home url, or temporarily IP banned"
 	}
 	return nil, &HTTPError{Method: method, Path: path, StatusCode: resp.StatusCode, Message: message}
+}
+
+// waitForNextRequest: Sleeps until apiInterval has passed since the last api request, or until
+// ctx is done.
+func (c *DexClient) waitForNextRequest(ctx context.Context) error {
+	c.lastRequestMu.Lock()
+	defer c.lastRequestMu.Unlock()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(time.Until(c.lastRequest.Add(apiInterval))):
+	}
+	c.lastRequest = time.Now()
+	return nil
 }
 
 // RequestAndDecode: Convenience wrapper to also decode response to given interface.
