@@ -15,6 +15,9 @@ const (
 	BaseAPI = "https://api.mangadex.org"
 )
 
+// maxBodySize caps the responses read: api json and page images.
+const maxBodySize = 100 << 20
+
 // DexResponse: Generic MangaDex API response type, most responses have this structure.
 type DexResponse struct {
 	Result   string          `json:"result"`
@@ -109,7 +112,7 @@ func (c *DexClient) Request(ctx context.Context, method, url string, body io.Rea
 	// the body is usually an ErrorResponse, but can also be an HTML error page
 	var er ErrorResponse
 	message := ""
-	if err := json.NewDecoder(resp.Body).Decode(&er); err == nil {
+	if err := json.NewDecoder(io.LimitReader(resp.Body, maxBodySize)).Decode(&er); err == nil {
 		message = er.GetErrors()
 	}
 	if message == "" && resp.StatusCode == http.StatusForbidden {
@@ -126,7 +129,7 @@ func (c *DexClient) RequestAndDecode(ctx context.Context, method, url string, bo
 	}
 	defer resp.Body.Close()
 
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+	if err := json.NewDecoder(io.LimitReader(resp.Body, maxBodySize)).Decode(&res); err != nil {
 		return fmt.Errorf("mangodex: %s %s: decode response: %w", method, resp.Request.URL.Path, err)
 	}
 	return nil

@@ -92,7 +92,10 @@ func (s *AtHomeServer) GetChapterPageContext(ctx context.Context, quality, filen
 	}
 	defer resp.Body.Close()
 
-	image, err := io.ReadAll(resp.Body)
+	image, err := io.ReadAll(io.LimitReader(resp.Body, maxBodySize+1))
+	if err == nil && len(image) > maxBodySize {
+		err = fmt.Errorf("image over %d bytes", maxBodySize)
+	}
 	if report && ctx.Err() == nil {
 		s.report(ctx, reportPayload{
 			URL:      url,
