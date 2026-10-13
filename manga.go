@@ -106,6 +106,18 @@ func (s *MangaService) List(params url.Values) (mangaList []*Manga, err error) {
 
 // ListContext: Same as List, with a context.
 func (s *MangaService) ListContext(ctx context.Context, params url.Values) (mangaList []*Manga, err error) {
+	mangaList, _, err = s.ListWithTotalContext(ctx, params)
+	return mangaList, err
+}
+
+// ListWithTotal: Same as List, also returns the total number of mangas matching the params
+// (for paging with offset and limit).
+func (s *MangaService) ListWithTotal(params url.Values) (mangaList []*Manga, total int, err error) {
+	return s.ListWithTotalContext(context.Background(), params)
+}
+
+// ListWithTotalContext: Same as ListWithTotal, with a context.
+func (s *MangaService) ListWithTotalContext(ctx context.Context, params url.Values) (mangaList []*Manga, total int, err error) {
 	u, _ := url.Parse(s.client.baseAPI)
 	u.Path = MangaListPath
 	u.RawQuery = params.Encode()
@@ -113,12 +125,12 @@ func (s *MangaService) ListContext(ctx context.Context, params url.Values) (mang
 	var res DexResponse
 	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {
-		return nil, fmt.Errorf("list manga: %w", err)
+		return nil, 0, fmt.Errorf("list manga: %w", err)
 	}
 	err = json.Unmarshal(res.Data, &mangaList)
 	if err != nil {
-		return nil, fmt.Errorf("list manga: %w", err)
+		return nil, 0, fmt.Errorf("list manga: %w", err)
 	}
 
-	return mangaList, nil
+	return mangaList, res.Total, nil
 }

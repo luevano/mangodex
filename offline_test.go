@@ -119,3 +119,23 @@ func TestAPIRequestInterval(t *testing.T) {
 		t.Errorf("3 requests took %s, wanted at least %s", elapsed, 2*apiInterval)
 	}
 }
+
+func TestMangaListWithTotal(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"result":"ok","data":[{"id":"a","type":"manga"}],"limit":1,"offset":0,"total":42}`))
+	}))
+	defer server.Close()
+	c, err := NewDexClient(DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.baseAPI = server.URL
+
+	list, total, err := c.Manga.ListWithTotal(url.Values{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 1 || list[0].ID != "a" || total != 42 {
+		t.Errorf("got %d mangas, total %d", len(list), total)
+	}
+}
