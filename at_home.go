@@ -75,50 +75,57 @@ func (s *AtHomeServer) GetChapterPage(quality, filename string, report bool) ([]
 }
 
 // GetChapterPageContext: Same as GetChapterPage, with a context.
+//
+// With report, the result (failures included) is reported to MangaDex@Home in the background, as
+// it asks clients to do so it can route around bad nodes.
 func (s *AtHomeServer) GetChapterPageContext(ctx context.Context, quality, filename string, report bool) ([]byte, error) {
-	var finalErr error
 	url := strings.Join([]string{s.BaseURL, quality, s.Chapter.Hash, filename}, "/")
 
-	// Start timing how long to get all bytes for the file.
 	start := time.Now()
 	resp, err := s.client.Request(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		finalErr = fmt.Errorf("get chapter page %q: %w", filename, err)
-		if resp == nil || resp.Body == nil {
-			return nil, finalErr
+		// a cancelled download says nothing about the node
+		if report && ctx.Err() == nil {
+			s.report(ctx, reportPayload{URL: url, Duration: time.Since(start).Milliseconds()})
 		}
+		return nil, fmt.Errorf("get chapter page %q: %w", filename, err)
 	}
 	defer resp.Body.Close()
 
-	// Even on failed requests, get all the bytes from the body
 	image, err := io.ReadAll(resp.Body)
+	if report && ctx.Err() == nil {
+		s.report(ctx, reportPayload{
+			URL:      url,
+			Success:  err == nil,
+			Bytes:    len(image),
+			Duration: time.Since(start).Milliseconds(),
+			Cached:   strings.HasPrefix(resp.Header.Get("X-Cache"), "HIT"),
+		})
+	}
 	if err != nil {
-		finalErr = fmt.Errorf("get chapter page %q: read response: %w", filename, err)
-	}
-
-	// Send report in the background.
-	if report {
-		// the report outlives this call, so it must not be cancelled with ctx.
-		reportCtx := context.WithoutCancel(ctx)
-		go func() {
-			r := &reportPayload{
-				URL:      url,
-				Success:  finalErr == nil,
-				Bytes:    len(image),
-				Duration: time.Since(start).Milliseconds(),
-				Cached:   strings.HasPrefix(resp.Header.Get("X-Cache"), "HIT"),
-			}
-			rBytes, err := json.Marshal(r)
-			if err == nil {
-				s.client.Request(reportCtx, http.MethodPost, MDHomeReportURL, bytes.NewBuffer(rBytes))
-			}
-		}()
-	}
-
-	if finalErr != nil {
-		return nil, finalErr
+		return nil, fmt.Errorf("get chapter page %q: read response: %w", filename, err)
 	}
 	return image, nil
+}
+
+// reportTimeout: How long a report can take, it runs in the background.
+const reportTimeout = 30 * time.Second
+
+// report: Sends the report in the background.
+func (s *AtHomeServer) report(ctx context.Context, r reportPayload) {
+	// the report outlives the download, so it must not be cancelled with ctx
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), reportTimeout)
+	go func() {
+		defer cancel()
+		b, err := json.Marshal(r)
+		if err != nil {
+			return
+		}
+		resp, err := s.client.Request(ctx, http.MethodPost, s.client.reportURL, bytes.NewReader(b))
+		if err == nil {
+			resp.Body.Close()
+		}
+	}()
 }
 
 // reportPayload: Required fields for reporting page download result.

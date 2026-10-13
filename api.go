@@ -29,8 +29,9 @@ type DexResponse struct {
 type DexClient struct {
 	client *http.Client
 	header http.Header
-	// BaseAPI, only changed in tests
-	baseAPI string
+	// BaseAPI and MDHomeReportURL, only changed in tests
+	baseAPI   string
+	reportURL string
 
 	common service
 
@@ -64,9 +65,10 @@ func NewDexClient(options Options) (*DexClient, error) {
 	header.Set("User-Agent", options.UserAgent)
 
 	dex := &DexClient{
-		client:  client,
-		header:  header,
-		baseAPI: BaseAPI,
+		client:    client,
+		header:    header,
+		baseAPI:   BaseAPI,
+		reportURL: MDHomeReportURL,
 	}
 	dex.common.client = dex
 
