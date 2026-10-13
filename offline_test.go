@@ -75,3 +75,23 @@ func TestLocalisedStringsObject(t *testing.T) {
 		t.Errorf("wanted a stable fallback, got %q", got)
 	}
 }
+
+func TestHTTPClientOption(t *testing.T) {
+	c, err := NewDexClient(DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.client.Timeout == 0 {
+		t.Error("the default client should have a timeout")
+	}
+
+	given := &http.Client{}
+	options := DefaultOptions()
+	options.HTTPClient = given
+	if c, err = NewDexClient(options); err != nil {
+		t.Fatal(err)
+	}
+	if c.client != given {
+		t.Error("the given client should be used")
+	}
+}

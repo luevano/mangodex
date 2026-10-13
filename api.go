@@ -55,13 +55,16 @@ func NewDexClient(options Options) (*DexClient, error) {
 		return nil, fmt.Errorf("mangodex: invalid options: %w", err)
 	}
 
-	client := http.Client{}
+	client := options.HTTPClient
+	if client == nil {
+		client = &http.Client{Timeout: defaultTimeout}
+	}
 	header := http.Header{}
 	header.Set("Content-Type", "application/json")
 	header.Set("User-Agent", options.UserAgent)
 
 	dex := &DexClient{
-		client:  &client,
+		client:  client,
 		header:  header,
 		baseAPI: BaseAPI,
 	}
