@@ -9,8 +9,9 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
+
+	"golang.org/x/time/rate"
 )
 
 const (
@@ -41,8 +42,8 @@ type DexClient struct {
 	baseAPI   string
 	reportURL string
 
-	lastRequest   time.Time
-	lastRequestMu sync.Mutex
+	// limiter: one api request per apiInterval
+	limiter *rate.Limiter
 
 	common service
 
@@ -80,6 +81,7 @@ func NewDexClient(options Options) (*DexClient, error) {
 		header:    header,
 		baseAPI:   BaseAPI,
 		reportURL: MDHomeReportURL,
+		limiter:   rate.NewLimiter(rate.Every(apiInterval), 1),
 	}
 	dex.common.client = dex
 
@@ -106,7 +108,7 @@ func (c *DexClient) Request(ctx context.Context, method, url string, body io.Rea
 
 	// MangaDex@Home nodes and reports don't count
 	if strings.HasPrefix(url, c.baseAPI) {
-		if err := c.waitForNextRequest(ctx); err != nil {
+		if err := c.limiter.Wait(ctx); err != nil {
 			return nil, fmt.Errorf("mangodex: %s %s: %w", method, path, err)
 		}
 	}
@@ -133,21 +135,6 @@ func (c *DexClient) Request(ctx context.Context, method, url string, body io.Rea
 		message = "expired MangaDex@Home url, or temporarily IP banned"
 	}
 	return nil, &HTTPError{Method: method, Path: path, StatusCode: resp.StatusCode, Message: message}
-}
-
-// waitForNextRequest: Sleeps until apiInterval has passed since the last api request, or until
-// ctx is done.
-func (c *DexClient) waitForNextRequest(ctx context.Context) error {
-	c.lastRequestMu.Lock()
-	defer c.lastRequestMu.Unlock()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-time.After(time.Until(c.lastRequest.Add(apiInterval))):
-	}
-	c.lastRequest = time.Now()
-	return nil
 }
 
 // RequestAndDecode: Convenience wrapper to also decode response to given interface.

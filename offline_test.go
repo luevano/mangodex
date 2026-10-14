@@ -1,7 +1,9 @@
 package mangodex
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -117,6 +119,38 @@ func TestAPIRequestInterval(t *testing.T) {
 	}
 	if elapsed := time.Since(start); elapsed < 2*apiInterval {
 		t.Errorf("3 requests took %s, wanted at least %s", elapsed, 2*apiInterval)
+	}
+}
+
+// a cancelled request returns right away, not after the requests waiting before it
+func TestAPIRequestIntervalCanceled(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"result":"ok","data":[]}`))
+	}))
+	defer server.Close()
+	c, err := NewDexClient(DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.baseAPI = server.URL
+
+	if _, err := c.Manga.List(url.Values{}); err != nil {
+		t.Fatal(err)
+	}
+	// these wait their turn, ~200ms each
+	for range 3 {
+		go c.Manga.List(url.Values{})
+	}
+	time.Sleep(20 * time.Millisecond)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	time.AfterFunc(20*time.Millisecond, cancel)
+	start := time.Now()
+	if _, err := c.Manga.ListContext(ctx, url.Values{}); !errors.Is(err, context.Canceled) {
+		t.Errorf("wanted context.Canceled, got %v", err)
+	}
+	if elapsed := time.Since(start); elapsed > 150*time.Millisecond {
+		t.Errorf("the cancelled request took %s", elapsed)
 	}
 }
 
