@@ -55,6 +55,9 @@ func (s *AtHomeService) GetContext(ctx context.Context, id string, params url.Va
 	u.Path = fmt.Sprintf(GetMDHomeURLPath, id)
 	u.RawQuery = params.Encode()
 
+	if err := s.client.atHomeLimiter.Wait(ctx); err != nil {
+		return nil, fmt.Errorf("get MangaDex@Home server for chapter %q: %w", id, err)
+	}
 	var res AtHomeServerResponse
 	err = s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
 	if err != nil {

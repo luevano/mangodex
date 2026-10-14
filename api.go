@@ -21,6 +21,10 @@ const (
 // apiInterval keeps to MangaDex's limit of ~5 api requests per second per IP.
 const apiInterval = 200 * time.Millisecond
 
+// atHomePerMinute: MangaDex's limit on /at-home/server requests per IP
+// (api.mangadex.org/docs/2-limitations), on top of the api's.
+const atHomePerMinute = 40
+
 // maxBodySize caps the responses read: api json and page images.
 const maxBodySize = 100 << 20
 
@@ -44,6 +48,8 @@ type DexClient struct {
 
 	// limiter: one api request per apiInterval
 	limiter *rate.Limiter
+	// atHomeLimiter: /at-home/server requests, atHomePerMinute evenly spread
+	atHomeLimiter *rate.Limiter
 
 	common service
 
@@ -82,6 +88,8 @@ func NewDexClient(options Options) (*DexClient, error) {
 		baseAPI:   BaseAPI,
 		reportURL: MDHomeReportURL,
 		limiter:   rate.NewLimiter(rate.Every(apiInterval), 1),
+		// a burst would allow more than the limit in a minute
+		atHomeLimiter: rate.NewLimiter(rate.Every(time.Minute/atHomePerMinute), 1),
 	}
 	dex.common.client = dex
 

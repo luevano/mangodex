@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"golang.org/x/time/rate"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -171,5 +172,32 @@ func TestMangaListWithTotal(t *testing.T) {
 	}
 	if len(list) != 1 || list[0].ID != "a" || total != 42 {
 		t.Errorf("got %d mangas, total %d", len(list), total)
+	}
+}
+
+// MangaDex allows 40 /at-home/server requests a minute, on top of the api limit
+func TestAtHomeServerInterval(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"result":"ok","baseUrl":"https://node","chapter":{"hash":"h","data":["1.png"]}}`))
+	}))
+	defer server.Close()
+	c, err := NewDexClient(DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.atHomeLimiter.Limit() != rate.Every(time.Minute/40) || c.atHomeLimiter.Burst() != 1 {
+		t.Errorf("got %v/s burst %d, want 40/min", c.atHomeLimiter.Limit(), c.atHomeLimiter.Burst())
+	}
+	c.baseAPI = server.URL
+	c.atHomeLimiter = rate.NewLimiter(rate.Every(300*time.Millisecond), 1)
+
+	start := time.Now()
+	for range 3 {
+		if _, err := c.AtHome.Get("id", url.Values{}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if elapsed := time.Since(start); elapsed < 600*time.Millisecond {
+		t.Errorf("3 requests took %s, wanted at least 600ms", elapsed)
 	}
 }
